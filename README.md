@@ -36,6 +36,8 @@ skills/<skill-name>/SKILL.md
 | `skills/hilir-cad` | Drawing generation via the JELAS CAD MCP server (PFD/P&ID/plan/GA/plot/iso/SLD, solids, MTO, DXF/DEXPI/STEP/STL) | `cad.hilir.app/mcp` | yes |
 | `skills/dwsim-mcp` | Chemical process simulation via the HILIR DWSIM MCP server (steady-state + dynamic flowsheets, reactions, PID tuning, pump curves with NPSHr, pipe hydraulics, shell-and-tube rating, distillation screening, scenario sweeps) | `dwsim.hilir.app/mcp` | yes |
 | `skills/techlib-mcp` | Oil/gas/petrochemical/energy technology evidence via the HILIR Technology Library (technology cards, costs with basis, vendors, equipment classes, plants and projects, source documents, standards, glossary, Postgres/graph layer) | `techlib-api.hilir.app/mcp` | yes |
+| `skills/tlea-mcp` | East Asian energy-technology evidence via TLEA (hybrid search with zh/ja/ko termbase resolution, per-kind filter contract, licence/reuse labels) | `tlea-api.hilir.app/mcp` | yes |
+| `skills/mygis-mcp` | Malaysia GIS via mygis (geocoding + admin/cadastral chain, land cover/use, forest and Sarawak overlays, terrain/bathymetry, routing, static/Wayback maps, self-hosted snapshot layers, construction site lens, site_report aggregate) | `mygis.hilir.app/mcp` | yes |
 
 ## Planned to migrate here
 
