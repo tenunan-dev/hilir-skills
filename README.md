@@ -34,6 +34,7 @@ skills/<skill-name>/SKILL.md
 | `skills/hilir-thunderbolt` | Electrical power-systems studies (IEC 60909, load flow, arc flash, coordination, N-1, project storage) | `thunderbolt.hilir.app/mcp` | yes |
 | `skills/conteng` | PDF/image annotation at mm precision (review pins, callouts, redaction, drawing CRS, exports, review reports) | `conteng.hilir.app/mcp` | yes |
 | `skills/hilir-cad` | Drawing generation via the JELAS CAD MCP server (PFD/P&ID/plan/GA/plot/iso/SLD, solids, MTO, DXF/DEXPI/STEP/STL) | `cad.hilir.app/mcp` | yes |
+| `skills/dwsim-mcp` | Chemical process simulation via the HILIR DWSIM MCP server (steady-state + dynamic flowsheets, reactions, PID tuning, pump curves with NPSHr, pipe hydraulics, shell-and-tube rating, distillation screening, scenario sweeps) | `dwsim.hilir.app/mcp` | yes |
 
 ## Planned to migrate here
 
