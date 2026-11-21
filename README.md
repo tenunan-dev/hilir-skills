@@ -32,6 +32,7 @@ skills/<skill-name>/SKILL.md
 | Folder | Serves | MCP server | Canonical? |
 |---|---|---|---|
 | `skills/hilir-thunderbolt` | Electrical power-systems studies (IEC 60909, load flow, arc flash, coordination, N-1, project storage) | `thunderbolt.hilir.app/mcp` | yes |
+| `skills/conteng` | PDF/image annotation at mm precision (review pins, callouts, redaction, drawing CRS, exports, review reports) | `conteng.hilir.app/mcp` | yes |
 
 ## Planned to migrate here
 
@@ -39,7 +40,6 @@ skills/<skill-name>/SKILL.md
 |---|---|---|
 | `skills/hilir-libraries` | Routing across the seven HILIR libraries | `ZCode Plugin/hilir-libraries/skills/hilir-libraries/` |
 | `skills/hilir-cad` | JELAS CAD MCP server (PFD/P&ID/plan/iso/SLD, solids, MTO) | `~/.agents/skills/hilir-cad/` |
-| `skills/conteng` | Conteng MCP server (PDF/image annotation, review pins, redaction) | `~/.agents/skills/conteng/` |
 
 ## How to install a skill from here into an app
 
