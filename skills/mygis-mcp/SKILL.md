@@ -1,6 +1,6 @@
 ---
 name: mygis-mcp
-description: Use the mygis Malaysia GIS MCP server — 32 read-only tools (geocoding, admin/cadastral lookup, land cover and land use, forest and Sarawak overlays, terrain, bathymetry, routing, static/satellite maps with Wayback history, 26 self-hosted snapshot layers including Canada/USGS oil & gas, construction site lens and the site_report aggregate) over free/open data. Covers the stateless connection (plain POST, no session id), authentication (Access JWT or estate key with catalog:read), the grouped tool loop, measurement and map recipes, and the honesty rules (unstated blanks, coverage ≠ absence, centroid distances, JPPH = reference not transactions). Use when asked to query mygis, mygis.hilir.app or the hilir mygis plugin, or for any Malaysia location question — a point's admin chain, what's on the land there, zoning/flood/slope for a project site, plot comparison, ports/quarries near a site, or a map screenshot with numbers instead of pixel estimates. Overseas snapshot layers (Canada, Suriname, global oil & gas) are catalogue/query-only and are not part of the Malaysia admin/land tools.
+description: Use the mygis Malaysia GIS MCP server — 32 read-only tools (worldwide forward/reverse geocoding and place detection, Malaysia admin/cadastral lookup, land cover and land use, forest and Sarawak overlays, terrain, bathymetry, routing, static/satellite maps with Wayback history, 26 self-hosted snapshot layers including Canada/USGS oil & gas, construction site lens and the site_report aggregate) over free/open data. Covers the stateless connection (plain POST, no session id), authentication (Access JWT or estate key with catalog:read), the grouped tool loop, measurement and map recipes, and the honesty rules (unstated blanks, coverage ≠ absence, centroid distances, JPPH = reference not transactions). Use when asked to query mygis, mygis.hilir.app or the hilir mygis plugin, or for any Malaysia location question — a point's admin chain, what's on the land there, zoning/flood/slope for a project site, plot comparison, ports/quarries near a site, or a map screenshot with numbers instead of pixel estimates. Geocoding/reverse geocoding work worldwide; overseas snapshot layers (Canada, Suriname, global oil & gas) are catalogue/query-only and are not part of the Malaysia admin/land tools.
 ---
 
 # mygis MCP (Malaysia GIS)
@@ -60,10 +60,12 @@ Credential rules that were deliberately settled and must not be "simplified":
 
 ## The 32 tools, by what you're actually doing
 
-**LOCATE** — `geocode` name/address → coordinates (≤10 candidates, ranked); `reverse_geocode`
-coordinates → address; `place_detect` one call: place name + address + admin chain + JUPEM
-UPI hierarchy + a geocode round-trip drift check — the "where is this coordinate" answer;
-`admin_lookup` state/daerah/Parlimen (P.xxx)/DUN (N.xxx) at a point, offline and instant
+**LOCATE** — `geocode` name/address → coordinates **worldwide** (MyGeoName first for Malaysia,
+Nominatim for the rest; optional `country_code`); `reverse_geocode` coordinates → address
+worldwide; `place_detect` one call: place name + address + geocode round-trip drift, plus
+Malaysia-only admin chain + JUPEM UPI hierarchy when the point is in Malaysia — the
+"where is this coordinate" answer; `admin_lookup` state/daerah/Parlimen (P.xxx)/DUN (N.xxx)
+at a point, offline and instant
 (federal territories have **no DUN** — absence is by design); `cadastral_lookup` JUPEM UPI
 negeri/daerah/mukim/seksyen with codes (admin hierarchy, **NOT** lot parcels; seksyen absent
 outside gazetted cities); `mukim_lookup` FMRS mukim + forest district.
