@@ -1,6 +1,6 @@
 ---
 name: resources-mcp
-description: Use the 5M Resources MCP server (resources.hilir.app) to resource-load an EPC schedule with traceable numbers. 37 tools over 32,656 man-hour norms, 52,947 Money-class cost rates, 2,372 escalation indices, 3,155 raw source facts, labour/material prices and benchmarks. It answers "man-hours, crew, plant, duration, cost" with sourced figures plus a seal, builds P6/MSP schedule XML from norms, escalates rates with a named index, writes a Basis of Estimate, and records actuals for calibration. Covers the stateless handshake, Access auth and per-tool scopes, exact-match filter vocabulary, source basis and citation rules, restricted-licence publication gate, the product rules (never invent/convert/escalate silently), and routing to atur/mygis/techlib for work outside its domain. Use for 5M Resources, resources.hilir.app, or to find norms, cost rates, escalation factors, raw tender facts, consumption quantities, or build estimates/schedules/BoE for construction and process-industry projects.
+description: Use the 5M Resources MCP server (resources.hilir.app) to resource-load an EPC schedule with traceable numbers. 39 tools over 32,656 man-hour norms, 52,947 Money-class cost rates, 2,372 escalation indices, 3,155 raw source facts, labour/material prices and benchmarks. It answers "man-hours, crew, plant, duration, cost" with sourced figures plus a seal, builds P6/MSP schedule XML from norms, escalates rates with a named index, writes a Basis of Estimate, and records actuals for calibration. Covers the stateless handshake, Access auth and per-tool scopes, exact-match filter vocabulary, source basis and citation rules, restricted-licence publication gate, the product rules (never invent/convert/escalate silently), and routing to atur/mygis/techlib for work outside its domain. Use for 5M Resources, resources.hilir.app, or to find norms, cost rates, escalation factors, raw tender facts, consumption quantities, or build estimates/schedules/BoE for construction and process-industry projects.
 ---
 
 # 5M Resources MCP (resource norms)
@@ -91,7 +91,7 @@ curl -fsS "${H[@]}" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{
 curl -fsS "${H[@]}" -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_catalog_info","arguments":{}}}' "$BASE"
 ```
 
-## The 37 tools
+## The 39 tools
 
 **32 always present** — 25 read (`catalog:read`) + 7 compute (`estimate:run`) — plus 5
 store-bound tools that appear in `tools/list` **only where their store exists** (D1 on the
@@ -119,6 +119,7 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 | `list_factors` | Productivity/place factor library; place tables carry state/district; `applicable_norms` warns when nobody accepts the factor (fails closed) |
 | `list_sources` / `get_benchmarks` / `recommend_sources` / `compare_sources` | Source registry; top-down benchmarks; precedence chain for a project profile; triangulation view for one norm |
 | `list_trades` / `list_equipment` / `list_wbs_templates` | Crew trade, machine and WBS vocabularies with example norm ids |
+| `map_boq_to_wbs` | Line-level BOQ → WBS by exact/key synonym rules + unit agreement; every unmatched line gets a reason; `mapped + unmatched === lines.length` |
 | `verify_seal` | Recompute an estimate from its inputs and compare the seal — prove before you hand over |
 | `list_actuals` | Raw logged actuals (audit a calibration ratio or confirm a write landed) |
 | `get_calibration` | Per-norm actual-vs-norm ratios — informational, never an automatic edit |
@@ -133,6 +134,7 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 | `export_schedule` | `msp_xml` / `p6_xml`; durations are absolute hours per each norm's own `hours_per_day` (or shift basis); calendar presets: `petrochemical_2_shift`, `malaysia_civil_construction`, or a custom rota |
 | `export_basis_of_estimate` | Markdown BoE — the reviewable, signable artifact; carries a `HUMAN REVIEW REQUIRED` marker when a restricted source is inside |
 | `import_schedule` | Read a P6 XER / P6 XML / MSP XML file **back** and compare durations vs norms. Quantities are never inferred — unmapped activities are returned in `unmatched` with a reason, never matched by name similarity |
+| `parse_schedule` | Parse a P6 XML/XER or MSP XML file into an **`atur.schedule/1`** network (links, summaries, only printed constraints/cost/actuals); no holidays or ranges invented — atur owns CPM, risk, EVM and the planning calendar |
 
 ### Store-bound (appear only where the store exists)
 
@@ -230,6 +232,6 @@ let the owner mint a replacement in hilir Access; do not rotate credentials your
 ## Numbers you must not quote from memory
 
 Counts, versions and statuses change with every ingest. The figures in this skill's
-description were true at writing (catalog 0.36.0+8ee64a3268c6, 37 tools) — always read the
+description were true at writing (catalog 0.36.0+fbea1480be14, 39 tools) — always read the
 current truth from `get_catalog_info` / `get_catalog_info.status_mix`, never from memory,
 and never assume an array is approved.
