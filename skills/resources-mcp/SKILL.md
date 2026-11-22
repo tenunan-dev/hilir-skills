@@ -1,6 +1,6 @@
 ---
 name: resources-mcp
-description: Use the 5M Resources MCP server (resources.hilir.app) — 37 tools over a content-hashed catalog of man-hour norms (32,656), Money-class cost norms (52,947), escalation indices (2,372), material prices, labour rates and benchmarks for oil & gas, petrochemical, energy and new-energy projects. Covers the stateless handshake, authentication (estate key or Access JWT, per-tool scopes), the agent loop (get_catalog_info → list_vocabularies → search → get_record → compute → verify_seal → log_actuals), exact-match filter vocabulary, the restricted-licence publication gate and the product rules (never invent a number, never convert currency, never escalate without a named index). Use when asked to query 5M Resources, resources.hilir.app, or to find norms, cost rates, escalation factors or build estimates/schedules/BoE for construction and process-industry projects.
+description: Use the 5M Resources MCP server (resources.hilir.app) to resource-load an EPC schedule with traceable numbers. 37 tools over 32,656 man-hour norms, 52,947 Money-class cost rates, 2,372 escalation indices, 3,155 raw source facts, labour/material prices and benchmarks. It answers "man-hours, crew, plant, duration, cost" with sourced figures plus a seal, builds P6/MSP schedule XML from norms, escalates rates with a named index, writes a Basis of Estimate, and records actuals for calibration. Covers the stateless handshake, Access auth and per-tool scopes, exact-match filter vocabulary, source basis and citation rules, restricted-licence publication gate, the product rules (never invent/convert/escalate silently), and routing to atur/mygis/techlib for work outside its domain. Use for 5M Resources, resources.hilir.app, or to find norms, cost rates, escalation factors, raw tender facts, consumption quantities, or build estimates/schedules/BoE for construction and process-industry projects.
 ---
 
 # 5M Resources MCP (resource norms)
@@ -15,6 +15,38 @@ catalog actually loaded, so an agent that reads only that still works correctly.
 answer is "the catalog holds no record for this" (some empty tools return an explicit
 acquisition plan) — never an approximation, interpolation or converted rate. Unverifiable
 values belong in the repo's `data/sources/GAPS.md`, not in an estimate.
+
+## What this server gives you — and how you benefit
+
+- **A defensible answer to "how many man-hours, what crew, what plant, how long?"** — `estimate_resources`
+  returns low/base/high MH, crew by trade, equipment, duration and a seal; `verify_seal` re-proves it later.
+- **A resource-loaded WBS and a schedule file** — `list_wbs_templates` / `suggest_wbs` → `get_logic_template`
+  → `build_schedule_block` → `export_schedule` (`p6_xml` / `msp_xml`, with a stated working calendar).
+- **Honest cost figures** — `get_cost_norms` keeps place, currency and price year; `list_escalation_indices`
+  → `escalate_cost` moves a figure with a NAMED index, never by default; `get_cost_baseline` restates rates;
+  `get_benchmarks` gives top-down sanity checks.
+- **A reviewable Basis of Estimate** — `export_basis_of_estimate` puts quantities, norms, factors,
+  assumptions, seals and the restricted-publication flag into one Markdown document.
+- **A closed learning loop** — `log_actuals` records real outcomes; `get_calibration` / `list_actuals`
+  show actual-vs-norm ratios so a norm can be flagged, not silently rewritten.
+- **Traceability for every number** — provenance, status and confidence on every norm, plus **3,155 raw
+  source facts** (`class:'facts'`: 3,128 verbatim RATOL tender observations with item/project/date and 27
+  sourced consumption quantities) for historical inference and comparison.
+
+You benefit because figures are sourced, sealed and replayable: an estimate or report can be audited
+instead of guessed. Exact-key vocabularies stop an empty page being mistaken for missing data, and
+when the catalog does not hold a value it says so and records the gap.
+
+## Not this server's job — route it, do not improvise
+
+- **CPM, float, Monte Carlo P50/P80, earned value, delay/EOT, look-ahead, state holidays and approval lead
+  times → atur** (`atur.hilir.app`). The calendars here are only the hours/day and working-week basis used
+  on export; atur owns the planning calendar.
+- **Site facts** (zoning, flood, slope, access, haul distance) → **mygis**; **contract clauses**
+  (PAM/FIDIC/JKR 203A) → **Hilir Kontrak**; **engineering standards, vendors, equipment** → **techlib**;
+  **market outlook** → **Market Intel**.
+- Auth/scopes never change here — `catalog:read`, `estimate:run`, `actuals:write`, `norms:contribute`
+  and admin-only `norms:review` are owned by hilir Access.
 
 ## Connection
 
@@ -69,11 +101,11 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 
 | Tool | Purpose |
 |---|---|
-| `get_catalog_info` | **Start here.** Version, current year, counts per class/array, tool map, the rules. No records, small response |
+| `get_catalog_info` | **Start here.** Version, current year, counts per class/array (**incl. 3,155 raw facts**), tool map, the rules. No records, small response |
 | `list_classes` | The 13 declared classes (Man … Money, Escalation) with record counts |
-| `list_vocabularies` | **Call before you filter.** Every exact filter value accepted, with counts (`{"class":"money"}`, `{"q":"pipe"}` narrow it) |
-| `search_catalog` | One search across every array; class/status filters; complete `total_matches`, capped page |
-| `get_record` | Full record by id from **any** array; a miss returns `suggestions`, never an inferred record |
+| `list_vocabularies` | **Call before you filter.** Every exact filter value accepted, with counts (`{"class":"money"}`, `{"q":"pipe"}` narrow it); `{"class":"facts"}` gives facts.sources/items/kawasans/years/dates/projects/units/statuses |
+| `search_catalog` | One search across every array, incl. raw source facts (`class:'facts'`); class/status filters; complete `total_matches`, capped page |
+| `get_record` | Full record by id from **any** array, incl. `FACT-MYJRATOL-*` / `FACT-CONS-*`; a miss returns `suggestions`, never an inferred record |
 | `search_activities` | Norms by keyword/discipline/phase/sector/source/status; pageable (`next_offset: null` = last page) |
 | `get_norm` | Full norm record: crew, output, applicable factors, provenance |
 | `get_cost_norms` | Money unit rates; filter by region/country/**year**/currency/status; paged, max 50 |
@@ -82,7 +114,8 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 | `get_cost_baseline` | Stored rates re-expressed at one target year by walking indices — derived and labelled; no index ⇒ unchanged with a note |
 | `get_labour_rates` | Published gross **monthly** wages by occupation, in the source currency — no hours basis stored; hourly is the caller's explicit conversion |
 | `get_material_prices` | Prices per material unit (cement per bag, steel per tonne); **no quantity, no work item** — combine with consumption from your drawings |
-| `get_equipment_rates` / `get_consumption_coefficients` / `get_margins` | Declared classes with **zero records** — honest empty answer + an acquisition plan; no figure is invented to fill them |
+| `get_equipment_rates` / `get_margins` | Declared classes with **zero records** — honest empty answer + an acquisition plan; no figure is invented to fill them |
+| `get_consumption_coefficients` | **27 sourced consumption facts** (`FACT-CONS-*`: kg/m³ cement/sand/aggregate, L/m² bitumen, kg/m² BRC, spacing→count/m); filter by `material`, paged; derived-from-spec values are low confidence. Honest `no_source` when a filter matches nothing |
 | `list_factors` | Productivity/place factor library; place tables carry state/district; `applicable_norms` warns when nobody accepts the factor (fails closed) |
 | `list_sources` / `get_benchmarks` / `recommend_sources` / `compare_sources` | Source registry; top-down benchmarks; precedence chain for a project profile; triangulation view for one norm |
 | `list_trades` / `list_equipment` / `list_wbs_templates` | Crew trade, machine and WBS vocabularies with example norm ids |
