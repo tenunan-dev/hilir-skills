@@ -73,16 +73,17 @@ outside gazetted cities); `mukim_lookup` FMRS mukim + forest district.
 **WHAT IS THERE** — `whats_here` every OSM feature at the point (≤40 items); `land_cover`
 Sentinel-2 10 m class (Trees/Built/Crops/Water/…) with auto-retry of the previous year on
 no-data; `land_cover_stats` % + ha mix over a bbox or radius (grid-sampled estimate, not a
-census); `land_use` i-Plan planning category (~2017 epoch, **Peninsular only**, dev-server
-backed — transient timeouts error cleanly, retry); `doe_landuse` DOE 2018 (**Johor only,
-partial**); `doe_klang` factories/chemical inventory (CAS numbers)/public complaints
-(**Klang study area only** — empty elsewhere means not covered, not nothing there);
-`forest_status` HSK reserve name, forest district, gazettement date/number/ha, compartment,
-function class (Peninsular; a **stopped FMRS service answers "unknown", not "not in a
-reserve"**); `sarawak_land_status` Sarawak overlays (PFE, logging/oil-palm concessions, LPF,
-RSPO, protected areas, peatland); `features_in_area` raw simplified GeoJSON for a
-bbox/polygon/radius (≤5000 features, bbox ≤0.25 deg², OSM ways only — no multipolygon
-expansion).
+census); `features_in_area` raw simplified GeoJSON for a bbox/polygon/radius (≤5000
+features, bbox ≤0.25 deg², OSM ways only — no multipolygon expansion);
+`poi_search`/`nearest`/`road_access` OSM + OSRM. **These OSM/Sentinel-2/OSRM tools work
+worldwide.** `land_use` i-Plan planning category (~2017 epoch, **Peninsular only**,
+dev-server backed — transient timeouts error cleanly, retry); `doe_landuse` DOE 2018
+(**Johor only, partial**); `doe_klang` factories/chemical inventory (CAS numbers)/public
+complaints (**Klang study area only** — empty elsewhere means not covered, not nothing
+there); `forest_status` HSK reserve name, forest district, gazettement date/number/ha,
+compartment, function class (Peninsular; a **stopped FMRS service answers "unknown", not
+"not in a reserve"**); `sarawak_land_status` Sarawak overlays (PFE, logging/oil-palm
+concessions, LPF, RSPO, protected areas, peatland).
 
 **PROJECT SITE LENS — start with `construction_site`**: structure-plan zoning (density,
 height limit, plinth %, gazette), the cadastral lot, flood zone with its ARI return period,
