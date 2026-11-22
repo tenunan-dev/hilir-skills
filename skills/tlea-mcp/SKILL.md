@@ -39,6 +39,9 @@ Credential rules that were deliberately settled and must not be "simplified":
 ## Session flow (raw client recipe)
 
 Streamable HTTP, session-based: initialize once, then carry `mcp-session-id` on every call.
+The initialize response carries server `instructions` — the at-connection agent loop
+(orient with facets/stats, browse with list_records, fetch by id, `rank` not `score`,
+licence-label rules, the CJK termbase loop); read it before your first tool call.
 
 ```bash
 BASE="https://tlea-api.hilir.app/mcp"
