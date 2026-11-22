@@ -26,6 +26,11 @@ key), scope `cad:generate`. In this workspace it is normally already connected v
 MCP reconnect; see the plugin's diagnosing-mcp flow). A 401 = credential missing/invalid;
 403 = valid credential but missing scope — fix the grant, not the token.
 
+The initialize response carries server `instructions` — the at-connection summary of this
+same loop (symbol_library first, valve-`"through"` discipline, type matrix, MTO, outputs
+hygiene, honest limits); read it before your first tool call. This skill and
+`GET /agent-guide` carry the deep detail on top of it.
+
 ## The core loop — always close it
 
 `symbol_library(type) → drawing_create → element_add / line_add (run_add for iso) → drawing_validate → drawing_render / drawing_view → drawing_export`

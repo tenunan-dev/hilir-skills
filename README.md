@@ -38,12 +38,14 @@ skills/<skill-name>/SKILL.md
 | `skills/techlib-mcp` | Oil/gas/petrochemical/energy technology evidence via the HILIR Technology Library (technology cards, costs with basis, vendors, equipment classes, plants and projects, source documents, standards, glossary, Postgres/graph layer) | `techlib-api.hilir.app/mcp` | yes |
 | `skills/tlea-mcp` | East Asian energy-technology evidence via TLEA (hybrid search with zh/ja/ko termbase resolution, per-kind filter contract, licence/reuse labels) | `tlea-api.hilir.app/mcp` | yes |
 | `skills/mygis-mcp` | Malaysia GIS via mygis (geocoding + admin/cadastral chain, land cover/use, forest and Sarawak overlays, terrain/bathymetry, routing, static/Wayback maps, self-hosted snapshot layers, construction site lens, site_report aggregate) | `mygis.hilir.app/mcp` | yes |
+| `skills/atur` | Project planning and the schedule record via Atur (CPM, DCMA 14-point health with OOS/float-erosion extras, SRA Monte Carlo, EVM/S-curve, EOT delay analysis, look-ahead, schedule diff, baseline freeze, Malaysian calendar data) | `atur.hilir.app/mcp` | yes |
+| `skills/resources-mcp` | 5M Resources cost/man-hour catalog (man-hour norms, Money-class cost norms, escalation indices, material prices, labour rates, benchmarks) with content-hash verification and estimate seals | `resources.hilir.app/mcp` | yes |
 
 ## Planned to migrate here
 
 | Folder | Serves | Currently canonical at |
 |---|---|---|
-| `skills/hilir-libraries` | Routing across the seven HILIR libraries | `ZCode Plugin/hilir-libraries/skills/hilir-libraries/` |
+| `skills/hilir-libraries` | Routing across the eight HILIR libraries (incl. Atur) | `ZCode Plugin/hilir-libraries/skills/hilir-libraries/` |
 
 ## How to install a skill from here into an app
 
