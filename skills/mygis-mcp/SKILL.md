@@ -1,15 +1,16 @@
 ---
 name: mygis-mcp
-description: Use the mygis Malaysia GIS MCP server — 32 read-only tools (geocoding, admin/cadastral lookup, land cover and land use, forest and Sarawak overlays, terrain, bathymetry, routing, static/satellite maps with Wayback history, self-hosted snapshot layers, construction site lens and the site_report aggregate) over free/open Malaysian data. Covers the stateless connection (plain POST, no session id), authentication (Access JWT or estate key with catalog:read), the grouped tool loop, measurement and map recipes, and the honesty rules (unstated blanks, coverage ≠ absence, centroid distances, JPPH = reference not transactions). Use when asked to query mygis, mygis.hilir.app or the hilir mygis plugin, or for any Malaysia location question — a point's admin chain, what's on the land there, zoning/flood/slope for a project site, plot comparison, ports/quarries near a site, or a map screenshot with numbers instead of pixel estimates.
+description: Use the mygis Malaysia GIS MCP server — 32 read-only tools (geocoding, admin/cadastral lookup, land cover and land use, forest and Sarawak overlays, terrain, bathymetry, routing, static/satellite maps with Wayback history, 26 self-hosted snapshot layers including Canada/USGS oil & gas, construction site lens and the site_report aggregate) over free/open data. Covers the stateless connection (plain POST, no session id), authentication (Access JWT or estate key with catalog:read), the grouped tool loop, measurement and map recipes, and the honesty rules (unstated blanks, coverage ≠ absence, centroid distances, JPPH = reference not transactions). Use when asked to query mygis, mygis.hilir.app or the hilir mygis plugin, or for any Malaysia location question — a point's admin chain, what's on the land there, zoning/flood/slope for a project site, plot comparison, ports/quarries near a site, or a map screenshot with numbers instead of pixel estimates. Overseas snapshot layers (Canada, Suriname, global oil & gas) are catalogue/query-only and are not part of the Malaysia admin/land tools.
 ---
 
 # mygis MCP (Malaysia GIS)
 
 mygis is a **read-only** GIS toolkit for Malaysia over free/open data (OSM, JUPEM,
-PLANMalaysia, Forestry FMRS, DOE, Esri, GEBCO, JPPH) plus eight self-hosted snapshot
-layers. **Every tool requires the `catalog:read` scope; nothing writes.** Coordinates are
-decimal degrees `[lat, lon]` and every result carries attribution and `retrieved_utc` —
-keep the attribution in anything you show a user.
+PLANMalaysia, Forestry FMRS, DOE, Esri, GEBCO, JPPH, Statistics Canada, AAFC, USGS,
+GEM, BCER, AER) plus **26 self-hosted snapshot layers** and the NRCan land-cover
+raster overlay. **Every tool requires the `catalog:read` scope; nothing writes.**
+Coordinates are decimal degrees `[lat, lon]` and every result carries attribution
+and `retrieved_utc` — keep the attribution in anything you show a user.
 
 ## Connection
 
@@ -94,12 +95,17 @@ presets, ≤20 results); `poi_search` raw POI search (35 presets or OSM tags, �
 **reference** buildings within a radius — reference records, never transactions.
 
 **SNAPSHOT LAYERS (self-hosted, no upstream call)** — `layers_list` is the catalogue first:
-id, group, feature count, fields, bbox, source, extraction date; `layer_query` fetches
-features near a point nearest-first. Coverage is state-specific by design: zoning/brownfield/
-lots are Melaka extracts, contours Johor, flood/slope Peninsular-wide, telco/drains partial
-— **check a layer's bbox before treating an empty result as a finding**. On contour layers
-each hit carries `elevation_m` — the surveyed 5 m band, not a spot height — plus a contour
-summary.
+id, group, **scope**, country, feature count, fields, bbox, source, licence, **access**,
+extraction date; `layer_query` fetches features near a point nearest-first. `scope`
+separates the Malaysia thematic layers (`malaysia`) from the **Overseas** panel
+(`overseas`: Canada — StatCan boundaries, AAFC ecumene/soils, BCER/AER oil & gas;
+Suriname/regional/global — USGS + GEM). Coverage is per layer: Malaysia zoning/brownfield/
+lots are Melaka extracts, contours Johor, flood/slope Peninsular-wide, telco/drains
+partial; BCER is British Columbia only; AER is Alberta and `access: "internal"`
+(non-commercial, do not republish). Canada land cover is a raster map overlay
+(`canada_landcover`), not a `layer_query` snapshot — **check a layer's bbox before
+treating an empty result as a finding**. On contour layers each hit carries
+`elevation_m` — the surveyed 5 m band, not a spot height — plus a contour summary.
 
 **TERRAIN & WATER** — `elevation` DEM at a point (±10 m) with optional profile along
 waypoints (gain/loss/min/max); `seabed_depth` GEBCO value (negative = metres below sea
