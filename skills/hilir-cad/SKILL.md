@@ -43,9 +43,10 @@ hygiene, honest limits); read it before your first tool call. This skill and
    (symbols are ~60–140 units wide), instruments 60–70 above/below their equipment.
 3. **Validate after every batch** (`drawing_validate`). Render/export **refuse** invalid
    drawings — that is deliberate, not a bug.
-4. **Deliver:** `drawing_render` (svg/png/pdf, inlined) or `drawing_view` (PNG as an
-   image in the conversation) for the user to see; `drawing_export` for the engineering
-   format (DEXPI for pfd/pid, DXF for plan/ga/plot/iso/sld).
+4. **Deliver:** `drawing_render` (svg/png/pdf, content inlined while the reply stays
+   under 64 KiB) or `drawing_view` (PNG as an image in the conversation) for the user to
+   see; `drawing_export` for the engineering format (DEXPI for pfd/pid, DXF for
+   plan/ga/plot/iso/sld).
 
 ## Working discipline
 
@@ -103,12 +104,20 @@ needs commercial ISOGEN — this gives the line list, lengths, elbows and declar
 
 ## Retrieval & work-dir hygiene
 
-Every writer returns the artifact **content** in its result when it fits (with `sha256`);
-when it does not, the result carries a `hint` naming the file — fetch it with
-`get_output(filename)` in chunks (bare filenames only, never a path; inline ceiling 64 MiB).
-`list_outputs()` inventories deliverables with owner + orphan flags; `delete_output`
-removes one; **`prune_outputs(dry_run=True)` first, then `dry_run=False`** to clear
-leftovers. `drawing_delete` removes the drawing's own outputs by default.
+Every writer returns the artifact **content** in its result while the **whole reply stays
+under 64 KiB** (with `sha256`). Above that, the entry is metadata only — `filename`,
+`bytes`, `mime`, `sha256`, `content_omitted` — plus a `hint`; fetch it with
+`get_output(filename)` in 64 KiB chunks (bare filenames only, never a path; hard read
+ceiling 64 MiB). **STL is always returned by reference** by default — a mesh is large and
+rarely wanted inside a reply; the STEP still inlines when it fits the budget.
+
+`list_outputs()` inventories deliverables with a namespaced owner (`drawing:<name>` /
+`solid:<name>`) and an `orphan` flag. Attribution is the manifest entry, or — for files
+that predate owner tracking — a stem matching a live drawing (`<name>.*`,
+`<name>-mto.csv`); those are recorded on the next `list_outputs` and are **not** orphans.
+`delete_output` removes one; **`prune_outputs(dry_run=True)` first, then
+`dry_run=False`** to clear leftovers — a live drawing's files are never swept while the
+drawing exists. `drawing_delete` removes the drawing's own outputs by default.
 
 ## Failure → action (top cases)
 
