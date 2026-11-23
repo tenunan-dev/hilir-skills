@@ -101,8 +101,8 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 
 | Tool | Purpose |
 |---|---|
-| `get_catalog_info` | **Start here.** Version, current year, counts per class/array (**incl. 3,155 raw facts**), tool map, the rules. No records, small response |
-| `list_classes` | The 13 declared classes (Man … Money, Escalation) with record counts |
+| `get_catalog_info` | **Start here.** Version, current year, counts per class/array (**incl. every raw fact**), each class with the **tools that serve it**, the tool map, the rules. No records, small response |
+| `list_classes` | The 13 declared classes (Man … Money, Escalation) with record counts and the **`tools` that serve each** — a 0-record class still names its live tool. Consumption facts count under Material |
 | `list_vocabularies` | **Call before you filter.** Every exact filter value accepted, with counts (`{"class":"money"}`, `{"q":"pipe"}` narrow it); `{"class":"facts"}` gives facts.sources/items/kawasans/years/dates/projects/units/statuses |
 | `search_catalog` | One search across every array, incl. raw source facts (`class:'facts'`); class/status filters; complete `total_matches`, capped page |
 | `get_record` | Full record by id from **any** array, incl. `FACT-MYJRATOL-*` / `FACT-CONS-*`; a miss returns `suggestions`, never an inferred record |
@@ -114,12 +114,13 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 | `get_cost_baseline` | Stored rates re-expressed at one target year by walking indices — derived and labelled; no index ⇒ unchanged with a note |
 | `get_labour_rates` | Published gross **monthly** wages by occupation, in the source currency — no hours basis stored; hourly is the caller's explicit conversion |
 | `get_material_prices` | Prices per material unit (cement per bag, steel per tonne); **no quantity, no work item** — combine with consumption from your drawings |
-| `get_equipment_rates` / `get_margins` | Declared classes with **zero records** — honest empty answer + an acquisition plan; no figure is invented to fill them |
+| `get_equipment_rates` | Machine class, **zero records** — honest empty answer + an acquisition plan; `list_equipment` gives the vocabulary, not rates |
+| `get_margins` | Margins class, **zero class records**, but returns `related_benchmarks` — the 7 published `BM-MARG-*` figures (contingency, supervision, maintenance, learning curve) with page citations. Use them via `get_benchmarks`; never invent a percentage |
 | `get_consumption_coefficients` | **27 sourced consumption facts** (`FACT-CONS-*`: kg/m³ cement/sand/aggregate, L/m² bitumen, kg/m² BRC, spacing→count/m); filter by `material`, paged; derived-from-spec values are low confidence. Honest `no_source` when a filter matches nothing |
 | `list_factors` | Productivity/place factor library; place tables carry state/district; `applicable_norms` warns when nobody accepts the factor (fails closed) |
 | `list_sources` / `get_benchmarks` / `recommend_sources` / `compare_sources` | Source registry; top-down benchmarks; precedence chain for a project profile; triangulation view for one norm |
 | `list_trades` / `list_equipment` / `list_wbs_templates` | Crew trade, machine and WBS vocabularies with example norm ids |
-| `map_boq_to_wbs` | Line-level BOQ → WBS by exact/key synonym rules + unit agreement; every unmatched line gets a reason; `mapped + unmatched === lines.length` |
+| `map_boq_to_wbs` | Line-level BOQ → WBS by exact/key synonym rules + unit agreement **after synonym normalisation** (`t`/`tonne`/`MT`, `m3`/`m³`/`cum`, `no`/`nos`/`each`, `lm`/`m`, `kgs`/`kg`); each mapped line reports `unit` and `unit_normalised`, every unmatched line a reason; `mapped + unmatched === lines.length` |
 | `verify_seal` | Recompute an estimate from its inputs and compare the seal — prove before you hand over |
 | `list_actuals` | Raw logged actuals (audit a calibration ratio or confirm a write landed) |
 | `get_calibration` | Per-norm actual-vs-norm ratios — informational, never an automatic edit |
@@ -131,10 +132,10 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 | `estimate_resources` | The core call: norm × quantity × factors → MH ranges, crew, equipment, duration, seal, basis, warnings. Errors come back as JSON, not exceptions |
 | `suggest_wbs` / `get_logic_template` | WBS template (paged norms per discipline); FS logic chains with lag days |
 | `build_schedule_block` | Estimate activities, apply FS links, aggregate crew/equipment — use `peak_qty` (not flat `total_qty`) for site staffing |
-| `export_schedule` | `msp_xml` / `p6_xml`; durations are absolute hours per each norm's own `hours_per_day` (or shift basis); calendar presets: `petrochemical_2_shift`, `malaysia_civil_construction`, or a custom rota |
+| `export_schedule` | `msp_xml` / `p6_xml`; durations are absolute hours per each norm's own `hours_per_day` (or shift basis). In `msp_xml`, Duration/Work is a valid `xsd:duration` in whole hours+minutes (`PT11H42M0S`) and `LinkLag` is **tenths of a minute** with LagFormat=days (a 2-day lag = `12000`). Calendar presets: `petrochemical_2_shift`, `malaysia_civil_construction`, or a custom rota |
 | `export_basis_of_estimate` | Markdown BoE — the reviewable, signable artifact; carries a `HUMAN REVIEW REQUIRED` marker when a restricted source is inside |
-| `import_schedule` | Read a P6 XER / P6 XML / MSP XML file **back** and compare durations vs norms. Quantities are never inferred — unmapped activities are returned in `unmatched` with a reason, never matched by name similarity |
-| `parse_schedule` | Parse a P6 XML/XER or MSP XML file into an **`atur.schedule/1`** network (links, summaries, only printed constraints/cost/actuals); no holidays or ranges invented — atur owns CPM, risk, EVM and the planning calendar |
+| `import_schedule` | Read a P6 XER / P6 XML / MSP XML file **back** and compare durations vs norms. The file's own calendar sets the hours→days basis unless you pass `hours_per_day` (XER `day_hr_cnt`, P6 `Calendar.HoursPerDay`, MSP `MinutesPerDay`), and the source is echoed. Quantities are never inferred — unmapped activities are returned in `unmatched` with a reason, never matched by name similarity |
+| `parse_schedule` | Parse a P6 XML/XER or MSP XML file into an **`atur.schedule/1`** network (links, summaries, only printed constraints/cost/actuals); reads the file's stated hours/day and working week (`weekend`), MSP `LinkLag` as tenths-of-a-minute; no holidays or ranges invented — atur owns CPM, risk, EVM and the planning calendar |
 
 ### Store-bound (appear only where the store exists)
 
@@ -232,6 +233,6 @@ let the owner mint a replacement in hilir Access; do not rotate credentials your
 ## Numbers you must not quote from memory
 
 Counts, versions and statuses change with every ingest. The figures in this skill's
-description were true at writing (catalog 0.36.0+fbea1480be14, 39 tools) — always read the
+description were true at writing (catalog 0.36.0+f68996e2910c, 39 tools) — always read the
 current truth from `get_catalog_info` / `get_catalog_info.status_mix`, never from memory,
 and never assume an array is approved.
