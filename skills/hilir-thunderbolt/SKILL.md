@@ -56,7 +56,10 @@ document cannot be solved at all; fix it before paying for a study call.
 - **1ph needs zero-sequence data on every element on the fault path** (`x0x_ratio`/
   `r0x0_ratio` on the utility, `r0/x0/c0` on cables, `vk0/mag0/si0` on transformers).
   It is refused, never approximated, until present — a Dyn11 blocks zero sequence
-  between LV and HV.
+  between LV and HV. A transformer's `vector_group` (e.g. `Dyn11`) is accepted as
+  written: the clock number sets the phase shift and the letters form the
+  zero-sequence group, so do **not** strip the number yourself or replace `Dyn11`
+  with a guessed group.
 - `case='min'` needs `ssc_min_mva` on every utility source; a generator-only
   network cannot do short circuit (a utility infeed with `ssc_mva` is required);
   a generator needs `rdss_ohm`. All refused rather than guessed.
@@ -69,8 +72,11 @@ document cannot be solved at all; fix it before paying for a study call.
 
 - Per breaker: bolted fault from the 3ph/max study, arcing current (worst of the
   full and reduced cases), clearing time from the breaker's own IEC 60255 curve
-  (or an explicit `arc_flash_clearing_time_s`), incident energy, AFB, and
-  `min_arc_rating_cal_cm2`.
+  (or the document's explicit `arc_flash.clearing_time_s` — set through
+  `add_breaker`'s `arc_flash_clearing_time_s` argument), incident energy, AFB, and
+  `min_arc_rating_cal_cm2`. Every breaker that produces no location — including
+  one with no `arc_flash` geometry — is listed in `skipped` with the reason, so
+  `skipped: []` means every breaker was computed.
 - **PPE selection is NFPA 70E Art. 130's call** — the table method is a different
   method, not interchangeable with the incident-energy result. Report the
   incident energy and the PPE arc rating it implies; do not label a result with
