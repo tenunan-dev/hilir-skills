@@ -68,7 +68,10 @@ Malaysia-only admin chain + JUPEM UPI hierarchy when the point is in Malaysia �
 at a point, offline and instant
 (federal territories have **no DUN** — absence is by design); `cadastral_lookup` JUPEM UPI
 negeri/daerah/mukim/seksyen with codes (admin hierarchy, **NOT** lot parcels; seksyen absent
-outside gazetted cities); `mukim_lookup` FMRS mukim + forest district.
+outside gazetted cities); `mukim_lookup` FMRS mukim + forest district, with `source` naming the
+dataset — `FMRS (<service>)`, or `JUPEM UPI (MyGDI, 2017)` plus `fmrs_error` when the state
+service is down. An answering FMRS service with no polygon returns nulls and says the area is
+empty in the source: that is not an outage.
 
 **WHAT IS THERE** — `whats_here` every OSM feature at the point (≤40 items); `land_cover`
 Sentinel-2 10 m class (Trees/Built/Crops/Water/…) with auto-retry of the previous year on
@@ -78,7 +81,8 @@ features, bbox ≤0.25 deg², OSM ways only — no multipolygon expansion);
 `poi_search`/`nearest`/`road_access` OSM + OSRM. **These OSM/Sentinel-2/OSRM tools work
 worldwide.** `land_use` i-Plan planning category (~2017 epoch, **Peninsular only**,
 dev-server backed — transient timeouts error cleanly, retry); `doe_landuse` DOE 2018
-(**Johor only, partial**); `doe_klang` factories/chemical inventory (CAS numbers)/public
+(**Johor only, partial** — a point outside the digitised area returns `covered: false` with a
+note, not an error); `doe_klang` factories/chemical inventory (CAS numbers)/public
 complaints (**Klang study area only** — empty elsewhere means not covered, not nothing
 there); `forest_status` HSK reserve name, forest district, gazettement date/number/ha,
 compartment, function class (Peninsular; a **stopped or token-gated FMRS service answers
@@ -179,6 +183,9 @@ area, `route`/`sea_route` between them, one static_map marking both.
   and a `truncated: true` scan means "there may be more", not "nothing else".
 - **A conflict is not a choice.** `site_report.conflicts` keeps both values with both
   sources; carry both into your answer instead of picking the one you like.
+- **A coverage miss is an answer.** `doe_landuse.covered: false`, an empty snapshot block (with
+  `coverage.outside_layer_bbox`), a null mukim from a service that answered — these are "not
+  covered / not mapped", not failed calls and not evidence of absence.
 - **`forest_status` unknown ≠ outside a reserve.** `reserveStatus: "unknown"` with a
   `reason` is an upstream condition (state service stopped, token required, timeout).
 - Extracts are **planning-grade, not survey-grade**; DEM is ±10 m; GEBCO is ≈450 m cells.
@@ -191,7 +198,9 @@ area, `route`/`sea_route` between them, one static_map marking both.
 
 - **Overpass-backed tools (`poi_search`, `nearest`, `road_access`, `features_in_area`,
   `whats_here`) can be slow** on the public instance: on a timeout, retry **once** (the
-  query keeps running and caches), then shrink the radius — don't loop. `road_access` no
+  query keeps running and caches), then shrink the radius — don't loop. A failure now lists
+  **every** mirror it tried (`all 3 endpoints failed: <host>: <reason>`), so quote that and
+  check `service_status` instead of blaming the data. `road_access` no
   longer fails when every mirror is down: it answers from the shipped roads snapshot or a
   stale cache and says so in `source`/`fallback_reason` (check `source` before calling the
   answer "live OSM").
