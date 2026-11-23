@@ -88,6 +88,7 @@ log_actuals ◀──────── calibration_export
 | `calibration_export` | read | actual man-hours as rows for resources' `log_actuals` |
 | `delay_event_add`\* | write | record a delay event; `affected_tasks` must be task ids in the revision, and unknown ones are reported |
 | `record_analysis`, `analysis_list` | write / read | bind an analysis result to the revision it ran on |
+| `audit_log` | read | the write history: which tool was called, on which project, when — if a write is not here, it did not happen through atur |
 
 ## The document — `atur.schedule/1`
 

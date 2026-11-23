@@ -100,8 +100,8 @@ permits, cost) — quote those honestly instead of guessing. Then `road_access` 
 that serves the site (OSM class/name/ref/surface, distance to nearest **mapped vertex** — a
 lower bound, not a survey). Its `source` says which data answered — `overpass` (live),
 `snapshot` (the self-hosted `osm-roads-malaysia` extract, with `extracted_at`) or
-`cache-stale` (a previous answer, with `cached_at`) — quote the source and date; `nearest` POIs ranked by road distance/drive time (35 category
-presets, ≤20 results); `poi_search` raw POI search (35 presets or OSM tags, ≤50 results,
+`cache-stale` (a previous answer, with `cached_at`) — quote the source and date; `nearest` POIs ranked by road distance/drive time (44 category
+presets, ≤20 results); `poi_search` raw POI search (44 presets or OSM tags, ≤50 results,
 `include_road_distance:true` adds drive data per result); `jpph_comparables` valuation-
 **reference** buildings within a radius — reference records, never transactions.
 

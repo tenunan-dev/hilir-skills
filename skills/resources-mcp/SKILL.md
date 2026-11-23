@@ -67,7 +67,7 @@ endpoint):
 | Scope | Grants |
 |---|---|
 | `catalog:read` | every read tool, `verify_seal`, `list_actuals` |
-| `estimate:run` | all 7 compute/export/import tools |
+| `estimate:run` | all 8 compute/export/import tools |
 | `actuals:write` | `log_actuals` only |
 | `norms:contribute` | `contribute_norm` / `list_contributions` only — grants no read, no approval |
 
@@ -93,8 +93,9 @@ curl -fsS "${H[@]}" -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{
 
 ## The 39 tools
 
-**32 always present** — 25 read (`catalog:read`) + 7 compute (`estimate:run`) — plus 5
-store-bound tools that appear in `tools/list` **only where their store exists** (D1 on the
+**34 always present** — 26 read (`catalog:read`) + 8 compute (`estimate:run`) — plus 5
+store-bound tools (`log_actuals`, `get_calibration`, `list_actuals`, `contribute_norm`,
+`list_contributions`) that appear in `tools/list` **only where their store exists** (D1 on the
 deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently broken.
 
 ### Read (`catalog:read`)
@@ -122,8 +123,6 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 | `list_trades` / `list_equipment` / `list_wbs_templates` | Crew trade, machine and WBS vocabularies with example norm ids |
 | `map_boq_to_wbs` | Line-level BOQ → WBS by exact/key synonym rules + unit agreement **after synonym normalisation** (`t`/`tonne`/`MT`, `m3`/`m³`/`cum`, `no`/`nos`/`each`, `lm`/`m`, `kgs`/`kg`); each mapped line reports `unit` and `unit_normalised`, every unmatched line a reason; `mapped + unmatched === lines.length` |
 | `verify_seal` | Recompute an estimate from its inputs and compare the seal — prove before you hand over |
-| `list_actuals` | Raw logged actuals (audit a calibration ratio or confirm a write landed) |
-| `get_calibration` | Per-norm actual-vs-norm ratios — informational, never an automatic edit |
 
 ### Compute (`estimate:run`)
 
@@ -132,7 +131,7 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 | `estimate_resources` | The core call: norm × quantity × factors → MH ranges, crew, equipment, duration, seal, basis, warnings. Errors come back as JSON, not exceptions |
 | `suggest_wbs` / `get_logic_template` | WBS template (paged norms per discipline); FS logic chains with lag days |
 | `build_schedule_block` | Estimate activities, apply FS links, aggregate crew/equipment — use `peak_qty` (not flat `total_qty`) for site staffing |
-| `export_schedule` | `msp_xml` / `p6_xml`; durations are absolute hours per each norm's own `hours_per_day` (or shift basis). In `msp_xml`, Duration/Work is a valid `xsd:duration` in whole hours+minutes (`PT11H42M0S`) and `LinkLag` is **tenths of a minute** with LagFormat=days (a 2-day lag = `12000`). Calendar presets: `petrochemical_2_shift`, `malaysia_civil_construction`, or a custom rota |
+| `export_schedule` | `msp_xml` / `p6_xml`; durations are absolute hours per each norm's own `hours_per_day` (or shift basis). In `msp_xml`, Duration/Work is a valid `xsd:duration` in whole hours+minutes (`PT11H42M0S`) and `LinkLag` is **tenths of a minute** with LagFormat=days (a 2-day lag = `12000`); every task carries `ActualDuration`/`RemainingDuration`. A supplied `calendar` becomes a real MSPDI `<Calendars>` entry (working weekdays + times) and drives task `Start`/`Finish` dates. Calendar presets: `petrochemical_2_shift`, `malaysia_civil_construction`, or a custom rota |
 | `export_basis_of_estimate` | Markdown BoE — the reviewable, signable artifact; carries a `HUMAN REVIEW REQUIRED` marker when a restricted source is inside |
 | `import_schedule` | Read a P6 XER / P6 XML / MSP XML file **back** and compare durations vs norms. The file's own calendar sets the hours→days basis unless you pass `hours_per_day` (XER `day_hr_cnt`, P6 `Calendar.HoursPerDay`, MSP `MinutesPerDay`), and the source is echoed. Quantities are never inferred — unmapped activities are returned in `unmatched` with a reason, never matched by name similarity |
 | `parse_schedule` | Parse a P6 XML/XER or MSP XML file into an **`atur.schedule/1`** network (links, summaries, only printed constraints/cost/actuals); reads the file's stated hours/day and working week (`weekend`), MSP `LinkLag` as tenths-of-a-minute; no holidays or ranges invented — atur owns CPM, risk, EVM and the planning calendar |
@@ -142,6 +141,8 @@ deployed Worker, JSONL for stdio). No store ⇒ the tool is absent, not silently
 | Tool | Scope | Purpose |
 |---|---|---|
 | `log_actuals` | `actuals:write` | Log an actual; `unit`/`norm_version` derived from the norm, never taken from the caller |
+| `list_actuals` | `catalog:read` | Raw logged actuals (audit a calibration ratio or confirm a write landed) |
+| `get_calibration` | `catalog:read` | Per-norm actual-vs-norm ratios — informational, never an automatic edit |
 | `contribute_norm` | `norms:contribute` | Submit a proposed norm — **upload and save only**, status always `submitted`; nothing enters the catalog; `reference` (page/section/URL) is mandatory — no evidence, no save |
 | `list_contributions` | `norms:contribute` | Readback of the raw queue; same scope as the write, no approval path |
 

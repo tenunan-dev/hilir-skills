@@ -6,7 +6,7 @@ description: Run chemical process simulation through the HILIR DWSIM MCP server 
 # DWSIM — process simulation over MCP
 
 `dwsim.hilir.app` runs the DWSIM chemical process-simulation engine headless on the
-**HILIR fork** (69 tools: 58 upstream + 11 HILIR — `tools/list` is the live count, trust
+**HILIR fork** (70 tools: 58 upstream + 12 HILIR — `tools/list` is the live count, trust
 it over this file). You build a *flowsheet* — compounds, streams, unit operations wired
 port to port — and the engine calculates. **The server asks for what it needs**: judge
 every gap as ask (`dwsim_flowsheet_degrees_of_freedom` / `dwsim_flowsheet_check`) →
@@ -24,15 +24,16 @@ contract) and `reference/measured/unit-op-inputs.md` (measured per-unit input li
 ```
 URL:      https://dwsim.hilir.app/mcp     (Streamable HTTP, POST only — GET/DELETE
                                            answer 405, which is normal)
-Headers:  Authorization: Bearer sk-…   (or x-api-key: sk-…)
+Headers:  Authorization: Bearer <credential>   (or x-api-key: <credential>)
 ```
 
 The credential is an **estate key** from access.hilir.app with scope **`dwsim:run`**
-(create a key → service DWSIM → role Runner). In this workspace the tools normally
-appear via the hilir-libraries plugin, prefixed
+(create a key → service DWSIM → role Runner), or an Access JWT with
+`aud = https://dwsim.hilir.app`. **There are no `sk-` keys.** In this workspace the tools
+normally appear via the hilir-libraries plugin, prefixed
 `mcp__plugin_hilir-libraries_hilir-dwsim__…`; direct MCP clients register them under
 their own server name (Claude Code:
-`claude mcp add --transport http dwsim https://dwsim.hilir.app/mcp --header "Authorization: Bearer sk-…"`).
+`claude mcp add --transport http dwsim https://dwsim.hilir.app/mcp --header "Authorization: Bearer <credential>"`).
 Protocol quirks that bite raw-HTTP callers: **stateless** (no session id — every request
 stands alone), one JSON-RPC message per request (batching returns `-32700`), the payload
 is the JSON *string* in `result.content[0].text` (parse it, don't index it), and an HTTP
@@ -70,6 +71,9 @@ key carries the scope) — ask the human, don't retry.
    energy streams (energy returns `energy_flow_kW`); unflashed phase values come back
    `null`, not 0/NaN — that is "no data", not an error. An empty phase has no compounds
    and no numbers; a present phase carries the stream temperature and pressure.
+   For the whole flowsheet in one call use `dwsim_flowsheet_stream_table` (fork v8):
+   material rows (phase, T, P, flows, composition) plus energy-stream duty, values
+   matching `dwsim_stream_get_results`.
 7. **Save before an expensive solve** (`dwsim_flowsheet_save`), and close what you
    opened (`dwsim_flowsheet_close`).
 
@@ -145,7 +149,7 @@ key carries the scope) — ask the human, don't retry.
 
 | You see | Do |
 |---|---|
-| 401 + challenge | no/invalid credential — the human supplies an `sk-…` estate key |
+| 401 + challenge | no/invalid credential — the human supplies an estate key or Access JWT (there are no `sk-` keys) |
 | 403 `required: dwsim:run` | not an estate key (every estate key carries it) — ask the human to check the key; don't retry |
 | `-32602 Missing required parameter: X` | read the tool's `inputSchema`, supply `X` (compounds take `names`, a package takes `name`) |
 | `-32700` parse / deserialize array | one JSON-RPC object per request — no batching |

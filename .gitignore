@@ -1,0 +1,6 @@
+# Tool/harness scratch — never part of a skill
+.mimosa/
+.v2c/
+.video_agent/
+out/
+.DS_Store

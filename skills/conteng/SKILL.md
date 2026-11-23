@@ -5,7 +5,8 @@ description: Annotate PDFs and images with mm-level precision through the Conten
 
 # Conteng — annotating documents and drawings over MCP
 
-Conteng is a remote MCP server at `https://conteng.hilir.app/mcp`. It stores a document
+Conteng is a remote MCP server at `https://conteng.hilir.app/mcp` (25 tools — `tools/list`
+is the live count). It stores a document
 byte-identically, keeps markup in an annotation store, and composes it onto a copy at
 view/export time — **the original is never modified**. Every tool is self-describing: read
 the tool's description before guessing a parameter, and trust it over memory.
@@ -113,6 +114,10 @@ include one layer, or `"all"`.
   `conteng_delete_export` removes the artifact only (annotations and original survive — it
   is simply re-exportable); `conteng_delete_file` deletes the file *and* its annotations,
   layers, CRS and exports permanently.
+- **Find a handle you lost.** `conteng_files` lists every file in the workspace (id, name,
+  page count, annotation count); `conteng_list_exports` inventories one file's exports;
+  `conteng_rename_file` gives a file a meaningful display name without touching its content,
+  annotations or id.
 - **Page surgery yields a NEW file with no annotations.** `conteng_pages` and
   `conteng_new_from` never modify the original; existing markup stays attached to it, page
   indices may shift, and the copy must be annotated afresh. Within one `conteng_pages` call

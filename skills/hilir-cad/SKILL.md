@@ -105,6 +105,22 @@ recompute it yourself; it cannot drift from what was validated.
 Honest boundary: fabrication-grade MTO (gaskets/bolts by flange spec, weld counts) still
 needs commercial ISOGEN — this gives the line list, lengths, elbows and declared items.
 
+## Sets, stream register, revision diff
+
+- **Sheet sets.** `sheet_set_create(name, sheets_json, title?, namespace?)` orders member
+  drawings as an issue set, stamps `sheet n/N` into each member's title block, and builds
+  the index + legend. `sheet_set_validate(name)` checks each sheet on its own, tag
+  uniqueness inside the set namespace, reciprocal off-page connectors and unique stream
+  numbers across the set.
+- **H&MB stream register.** `drawing_set_stream_table(name, streams_json)` attaches the
+  register the sheet prints — **supplied** data, not solved by this service (`id`, `name`,
+  `phase`, T, P, kg/h, kmol/h, `composition`; composition is the only object). On a line,
+  `stream_no` marks the stream and `circuit` the design circuit; element `attrs` (service,
+  measured_property, purpose, type, accuracy, criticality) feed the MTO registers.
+- **Revision note.** `drawing_diff(name_a, name_b)` returns added, removed and changed
+  elements/lines/runs with the field values on both sides, plus document-level changes
+  (title, title block, stream register) — the evidence for a revision note.
+
 ## Retrieval & work-dir hygiene
 
 Every writer returns the artifact **content** in its result while the **whole reply stays
