@@ -119,6 +119,10 @@ include one layer, or `"all"`.
   the ops run as a **sequence**: each is validated against the page count the previous op
   left, so `[duplicate p0, insert_blank p1]` on a 1-page file gives 3 pages, and
   `insert_blank` may name `page == page_count` to append.
+- **A PDF keeps at least one page.** `conteng_pages` refuses to delete the last remaining
+  page (`400 delete: page 0 is the only page — … use conteng_delete_file`), because a
+  zero-page document cannot be saved. To discard a document, use `conteng_delete_file`;
+  page surgery is for trimming, not for emptying.
 - **Raster images have no text layer** — `conteng_locate` and `conteng_text` return
   nothing. Use `conteng_view` + your own vision, and `conteng_calibrate` for precision;
   `conteng_geometry` works on vector PDFs only.
