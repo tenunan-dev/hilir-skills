@@ -33,7 +33,7 @@ skills/<skill-name>/SKILL.md
 |---|---|---|---|
 | `skills/hilir-thunderbolt` | Electrical power-systems studies (IEC 60909, load flow, arc flash, coordination, N-1, project storage) | `thunderbolt.hilir.app/mcp` | yes |
 | `skills/conteng` | PDF/image annotation at mm precision (review pins, callouts, redaction, drawing CRS, exports, review reports) | `conteng.hilir.app/mcp` | yes |
-| `skills/hilir-cad` | Drawing generation via the JELAS CAD MCP server (PFD/P&ID/plan/GA/plot/iso/SLD, solids, MTO, DXF/DEXPI/STEP/STL) | `cad.hilir.app/mcp` | yes |
+| `skills/hilir-cad` | Drawing generation via the JELAS CAD MCP server (PFD/P&ID/plan/GA/plot/iso/SLD, solids, MTO, issued A3/A1 sheets with sheet sets and an H&MB stream table, revision diff, DXF/DEXPI/STEP/STL) | `cad.hilir.app/mcp` | yes |
 | `skills/dwsim-mcp` | Chemical process simulation via the HILIR DWSIM MCP server (steady-state + dynamic flowsheets, reactions, PID tuning, pump curves with NPSHr, pipe hydraulics, shell-and-tube rating, distillation screening, scenario sweeps) | `dwsim.hilir.app/mcp` | yes |
 | `skills/techlib-mcp` | Oil/gas/petrochemical/energy technology evidence via the HILIR Technology Library (technology cards, costs with basis, vendors, equipment classes, plants and projects, source documents, standards, glossary, Postgres/graph layer) | `techlib-api.hilir.app/mcp` | yes |
 | `skills/tlea-mcp` | East Asian energy-technology evidence via TLEA (hybrid search with zh/ja/ko termbase resolution, per-kind filter contract, licence/reuse labels) | `tlea-api.hilir.app/mcp` | yes |
