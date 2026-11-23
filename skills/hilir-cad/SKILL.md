@@ -92,7 +92,10 @@ draw the wall in two segments and place the door in the gap.
 recompute it yourself; it cannot drift from what was validated.
 
 - pfd/pid → line list (tag/size/spec/from/to) + valve, instrument, equipment counts;
-  `pipe_length_m: null` — a schematic has no lengths.
+  `pipe_length_m: null` — a schematic has no lengths. Buckets follow the symbol
+  registry, not the kind spelling: typed bubbles (transmitter/controller/
+  indicator/analyzer) are `instruments`, and blind, strainer, orifice_plate,
+  rupture_disc and reducer are `valves`.
 - iso → pipe length per run + auto-counted elbows (one per direction change) + the
   `fittings`/`valves` you declare on the run (at `run_add` time or later via `run_update`).
 - plan/ga/plot → wall centreline metres, door/column schedules, equipment footprints,
