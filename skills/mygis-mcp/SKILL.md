@@ -1,13 +1,13 @@
 ---
 name: mygis-mcp
-description: Use the mygis Malaysia GIS MCP server — 32 read-only tools (worldwide forward/reverse geocoding and place detection, Malaysia admin/cadastral lookup, land cover and land use, forest and Sarawak overlays, terrain, bathymetry, routing, static/satellite maps with Wayback history, 26 self-hosted snapshot layers including Canada/USGS oil & gas, construction site lens and the site_report aggregate) over free/open data. Covers the stateless connection (plain POST, no session id), authentication (Access JWT or estate key with catalog:read), the grouped tool loop, measurement and map recipes, and the honesty rules (unstated blanks, coverage ≠ absence, centroid distances, JPPH = reference not transactions). Use when asked to query mygis, mygis.hilir.app or the hilir mygis plugin, or for any Malaysia location question — a point's admin chain, what's on the land there, zoning/flood/slope for a project site, plot comparison, ports/quarries near a site, or a map screenshot with numbers instead of pixel estimates. Geocoding/reverse geocoding work worldwide; overseas snapshot layers (Canada, Suriname, global oil & gas) are catalogue/query-only and are not part of the Malaysia admin/land tools.
+description: Use the mygis Malaysia GIS MCP server — 32 read-only tools (worldwide forward/reverse geocoding and place detection, Malaysia admin/cadastral lookup, land cover and land use, forest and Sarawak overlays, terrain, bathymetry, routing, static/satellite maps with Wayback history, 27 self-hosted snapshot layers including an offline OSM roads fallback and Canada/USGS oil & gas, construction site lens and the site_report aggregate) over free/open data. Covers the stateless connection (plain POST, no session id), authentication (Access JWT or estate key with catalog:read), the grouped tool loop, measurement and map recipes, degraded-mode behaviour (Overpass fallbacks, truncated scans, cross-source conflicts, FMRS unknown-not-outside), and the honesty rules (unstated blanks, coverage ≠ absence, centroid distances, JPPH = reference not transactions). Use when asked to query mygis, mygis.hilir.app or the hilir mygis plugin, or for any Malaysia location question — a point's admin chain, what's on the land there, zoning/flood/slope for a project site, plot comparison, ports/quarries near a site, or a map screenshot with numbers instead of pixel estimates. Geocoding/reverse geocoding work worldwide; overseas snapshot layers (Canada, Suriname, global oil & gas) are catalogue/query-only and are not part of the Malaysia admin/land tools.
 ---
 
 # mygis MCP (Malaysia GIS)
 
 mygis is a **read-only** GIS toolkit for Malaysia over free/open data (OSM, JUPEM,
 PLANMalaysia, Forestry FMRS, DOE, Esri, GEBCO, JPPH, Statistics Canada, AAFC, USGS,
-GEM, BCER, AER) plus **26 self-hosted snapshot layers** and the NRCan land-cover
+GEM, BCER, AER) plus **27 self-hosted snapshot layers** and the NRCan land-cover
 raster overlay. **Every tool requires the `catalog:read` scope; nothing writes.**
 Coordinates are decimal degrees `[lat, lon]` and every result carries attribution
 and `retrieved_utc` — keep the attribution in anything you show a user.
@@ -81,8 +81,10 @@ dev-server backed — transient timeouts error cleanly, retry); `doe_landuse` DO
 (**Johor only, partial**); `doe_klang` factories/chemical inventory (CAS numbers)/public
 complaints (**Klang study area only** — empty elsewhere means not covered, not nothing
 there); `forest_status` HSK reserve name, forest district, gazettement date/number/ha,
-compartment, function class (Peninsular; a **stopped FMRS service answers "unknown", not
-"not in a reserve"**); `sarawak_land_status` Sarawak overlays (PFE, logging/oil-palm
+compartment, function class (Peninsular; a **stopped or token-gated FMRS service answers
+`reserveStatus: "unknown"` with a `reason`, never "not in a reserve" and never an
+exception** — coverage is per state: Selangor, Johor, Perlis and Terengganu answer today
+while 8 states are stopped upstream); `sarawak_land_status` Sarawak overlays (PFE, logging/oil-palm
 concessions, LPF, RSPO, protected areas, peatland).
 
 **PROJECT SITE LENS — start with `construction_site`**: structure-plan zoning (density,
@@ -92,7 +94,9 @@ imagery date. Blank source fields come back `null` and are named in `unstated`;
 `not_available` lists what mygis cannot answer (soil/geology, groundwater, utility capacity,
 permits, cost) — quote those honestly instead of guessing. Then `road_access` for the road
 that serves the site (OSM class/name/ref/surface, distance to nearest **mapped vertex** — a
-lower bound, not a survey); `nearest` POIs ranked by road distance/drive time (35 category
+lower bound, not a survey). Its `source` says which data answered — `overpass` (live),
+`snapshot` (the self-hosted `osm-roads-malaysia` extract, with `extracted_at`) or
+`cache-stale` (a previous answer, with `cached_at`) — quote the source and date; `nearest` POIs ranked by road distance/drive time (35 category
 presets, ≤20 results); `poi_search` raw POI search (35 presets or OSM tags, ≤50 results,
 `include_road_distance:true` adds drive data per result); `jpph_comparables` valuation-
 **reference** buildings within a radius — reference records, never transactions.
@@ -107,8 +111,11 @@ lots are Melaka extracts, contours Johor, flood/slope Peninsular-wide, telco/dra
 partial; BCER is British Columbia only; AER is Alberta and `access: "internal"`
 (non-commercial, do not republish). Canada land cover is a raster map overlay
 (`canada_landcover`), not a `layer_query` snapshot — **check a layer's bbox before
-treating an empty result as a finding**. On contour layers each hit carries
-`elevation_m` — the surveyed 5 m band, not a spot height — plus a contour summary.
+treating an empty result as a finding**. Groups: planning, safety, land-property,
+**transport** (OSM drivable roads — also the `road_access` offline fallback), utilities,
+energy, terrain. A query that stops at a size cap returns `truncated: true` and
+`scanned_rows` — then `count` is a floor, never "nothing here". On contour layers each hit
+carries `elevation_m` — the surveyed 5 m band, not a spot height — plus a contour summary.
 
 **TERRAIN & WATER** — `elevation` DEM at a point (±10 m) with optional profile along
 waypoints (gain/loss/min/max); `seabed_depth` GEBCO value (negative = metres below sea
@@ -136,10 +143,16 @@ height aware); `sea_route` indicative nautical distance between ports + passages
 decision maker reads it (land planning, tenure, safety/environment, terrain/imagery,
 utilities, marine, property); snapshot layers feed their own group, queried within 1 km,
 capped at 3 hits, distances to the feature **CENTROID** (no point-in-polygon — proximity is
-not containment). Per-source best-effort: an `{ error }` inside a group never fails the
-call. `service_status` probes FMRS, Overpass, OSRM, gisdev, JUPEM UPI and JPPH and reports
-which are answering (cached 5 min, `force:true` re-probes) — **the first triage step:
-a timeout is not "nothing there" until a probe says the source answered**.
+not containment). A capped snapshot scan says `truncated: true` (count is a floor).
+Per-source best-effort: an `{ error }` inside a group never fails the call. When two
+sources in the reply disagree (e.g. DUN `N.20` from zoning vs `N.22` from the bundled
+boundaries) a top-level `conflicts` array names **both** values and both sources — neither
+is preferred, so never pick one silently. `service_status` probes FMRS **twice** (the
+token-gated national HSK overlay and a per-state service), the **whole Overpass mirror
+pool** (`ok` = at least one answered), OSRM, gisdev, JUPEM UPI and JPPH; each failure is
+tagged `error`, `auth_required` or `stopped` (cached 5 min, `force:true` re-probes) —
+**the first triage step: a timeout is not "nothing there" until a probe says the source
+answered**.
 
 ## The agent loop
 
@@ -162,7 +175,12 @@ area, `route`/`sea_route` between them, one static_map marking both.
 
 - **A missing value is not a fact.** Blanks and 0 return `null` and are named in `unstated`.
 - **No coverage is not evidence of absence.** Each result block carries its own source list
-  and error/coverage note — an empty answer from an out-of-area layer says "not covered".
+  and error/coverage note — an empty answer from an out-of-area layer says "not covered",
+  and a `truncated: true` scan means "there may be more", not "nothing else".
+- **A conflict is not a choice.** `site_report.conflicts` keeps both values with both
+  sources; carry both into your answer instead of picking the one you like.
+- **`forest_status` unknown ≠ outside a reserve.** `reserveStatus: "unknown"` with a
+  `reason` is an upstream condition (state service stopped, token required, timeout).
 - Extracts are **planning-grade, not survey-grade**; DEM is ±10 m; GEBCO is ≈450 m cells.
 - `jpph_comparables` are reference records, **not transactions and not a valuation**.
 - Nothing here is a title search, a valuation, a permit or a geotechnical opinion.
@@ -173,10 +191,16 @@ area, `route`/`sea_route` between them, one static_map marking both.
 
 - **Overpass-backed tools (`poi_search`, `nearest`, `road_access`, `features_in_area`,
   `whats_here`) can be slow** on the public instance: on a timeout, retry **once** (the
-  query keeps running and caches), then shrink the radius — don't loop.
+  query keeps running and caches), then shrink the radius — don't loop. `road_access` no
+  longer fails when every mirror is down: it answers from the shipped roads snapshot or a
+  stale cache and says so in `source`/`fallback_reason` (check `source` before calling the
+  answer "live OSM").
 - FMRS's point-in-polygon queries silently return nothing for a plain 4326 point; the server
   already wraps points in a small envelope — so if `forest_status`/`mukim_lookup` return
-  nothing while `service_status` shows FMRS answering, the area simply has no polygon there.
+  nothing while `service_status` shows the state's FMRS service answering, the area simply
+  has no polygon there. FMRS availability is **per state**: Melaka, Pahang, Kedah, N. Sembilan,
+  Penang, Kelantan, Perak and W.P. Kuala Lumpur were stopped upstream on 2026-11-23, while
+  Selangor, Johor, Perlis and Terengganu answered.
 - `land_use` rides a dev server: transient timeouts are normal, retry cleanly; don't treat a
   timeout as "unplanned land".
 - `admin_lookup`/`cadastral_lookup` are offline and instant — use them to sanity-check a
