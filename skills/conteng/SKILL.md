@@ -45,7 +45,10 @@ It must carry scope `conteng:annotate`: a 403 `insufficient_scope` or a 401 nami
 3. **Anchor precisely.** `conteng_locate` (text → bounding box in pt) and `conteng_geometry`
    (vector lines; `snap_point` → exact vertex/edge with distance) give exact anchors. Never
    eyeball a coordinate off a picture when a locate hit or a snap exists.
-4. **`conteng_annotate`** a batch of items (type table in the tool description).
+4. **`conteng_annotate`** a batch of items (type table in the tool description). Every
+   item carries its **own `units`** — coordinates straight from `locate`/`geometry` are
+   `pt`, so pass `units: "pt"` with them; the default is `fraction` (0–1) and mixing them
+   up is the single most common 400.
 5. **`conteng_view` again — the verify step is not optional.** Check placement before
    exporting. If a mark is off, prefer `conteng_edit_annotation` (keeps id and pin number)
    over remove + re-add.
@@ -80,7 +83,13 @@ Pages are **0-based** everywhere: `page` parameters, results, and the report's `
   reference points instead of trusting it.
 - Scale only, no E/N: **`conteng_set_scale`** — then `units: "ground_m"` works.
 - **`conteng_where`** converts both ways (`en=[E,N]` → page position for annotating; a
-  located label → its E/N). Run it before annotating with datasheet coordinates.
+  located label → its E/N). Run it before annotating with datasheet coordinates. It is a
+  **diagnostic converter**: for a position off the sheet it still answers, adding
+  `off_page: true` and `page_size_pt` ("the flare sits 200 m off the drawing" is a fact, not
+  an error). The write tools — `annotate`, `grid` — are the ones that reject off-page input.
+- **Coordinates may be a list or a numeric string.** `[120.5, 340]` and `"120.5, 340"` both
+  work for any pair or quad (`point`, `en`, `rect`, `at`, `points`, `region`, `crop`); pass
+  `units` alongside, since a string does not carry them.
 
 ## Markup types — pick by intent
 
@@ -106,7 +115,10 @@ include one layer, or `"all"`.
   layers, CRS and exports permanently.
 - **Page surgery yields a NEW file with no annotations.** `conteng_pages` and
   `conteng_new_from` never modify the original; existing markup stays attached to it, page
-  indices may shift, and the copy must be annotated afresh.
+  indices may shift, and the copy must be annotated afresh. Within one `conteng_pages` call
+  the ops run as a **sequence**: each is validated against the page count the previous op
+  left, so `[duplicate p0, insert_blank p1]` on a 1-page file gives 3 pages, and
+  `insert_blank` may name `page == page_count` to append.
 - **Raster images have no text layer** — `conteng_locate` and `conteng_text` return
   nothing. Use `conteng_view` + your own vision, and `conteng_calibrate` for precision;
   `conteng_geometry` works on vector PDFs only.
