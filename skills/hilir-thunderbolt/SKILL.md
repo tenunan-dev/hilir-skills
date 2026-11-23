@@ -1,11 +1,11 @@
 ---
 name: hilir-thunderbolt
-description: Electrical power-systems calculation engine over the hilir-thunderbolt MCP server — a single-line-diagram data model with AC load flow, IEC 60909-0 short circuit, cable ampacity and voltage-drop checks, IEC 60255 protection coordination, static motor starting, N-1 contingency, IEEE 1584-2018 arc flash, SLD export, and estate project storage. Use when a task involves buses, transformers, cables, fault levels, voltage drop, breaker settings, incident energy, or single-line diagrams — and state the study case (3ph/2ph, max/min) with every fault figure.
+description: Electrical power-systems calculation engine over the hilir-thunderbolt MCP server — a single-line-diagram data model with AC load flow, IEC 60909-0 short circuit, cable ampacity and voltage-drop checks, IEC 60255 protection coordination, static motor starting, N-1 contingency, IEEE 1584-2018 arc flash, SLD export, and estate project storage (append-only revisions, archive, name-confirmed purge). Use when a task involves buses, transformers, cables, fault levels, voltage drop, breaker settings, incident energy, or single-line diagrams — and state the study case (3ph/2ph, max/min) with every fault figure.
 ---
 
 # hilir-thunderbolt — electrical studies over a network document
 
-One MCP server, 31 tools (27 engine + 4 Worker-served project tools). The server
+One MCP server, 32 tools (27 engine + 5 Worker-served project tools). The server
 computes from a network document you author as data; nothing is inferred from a
 picture you did not specify. Call `get_capabilities` first — it lists what is
 implemented, what is deliberately NOT, the refusal conditions, and the unit of
@@ -49,7 +49,7 @@ document cannot be solved at all; fix it before paying for a study call.
 | `run_coordination` | series-pair selectivity on IEC 60255 curves | The 0.2 s margin is a **design default, not a standard**. Devices that cannot be evaluated are listed in `unchecked` with the reason — never silently dropped. |
 | `run_motor_start` | static locked-rotor voltage dip | **Not a dynamic starting study** — no acceleration, inertia, or time-to-speed. Say so when quoting the dip; the 15 % limit is a usual DOL design target, not a standards claim. |
 | `run_contingency` | N-1 over cables, transformers, optionally sources | Single outages only — N-2 is not implemented. |
-| `run_arc_flash` | IEEE 1584-2018 incident energy + AFB | Needs `arc_flash_*` geometry on each breaker — without it the breaker is listed in `skipped`, not computed. Refused for DC and >15 kV. |
+| `run_arc_flash` | IEEE 1584-2018 incident energy + AFB | Needs the breaker document's `arc_flash` block, set through `add_breaker`'s `arc_flash_*` arguments (`configuration`, `gap_mm`, `working_distance_mm`, enclosure `height/width/depth`, optional `clearing_time_s`). Without it the breaker is listed in `skipped`, not computed. Refused for DC and >15 kV. |
 
 ### Short-circuit specifics
 
@@ -100,15 +100,24 @@ the user's word, never a silent default:
 
 ## 5. Persistence (Worker-served, estate storage)
 
-The four project tools are answered by the Worker from estate D1, not the
-engine; ownership is the caller's own subject:
+The five project tools are answered by the Worker from estate D1, not the
+engine; ownership is the caller's own subject. `get_capabilities` states the same
+story under `project_storage`, and `initialize` appends it to the instructions:
 
-- `project_list` — my projects (id, name, latest revision).
+- `project_list` — my projects (id, name, latest revision, last updated);
+  `include_archived: true` also returns the archived ones.
 - `project_save` — without `project_id` creates revision 1; with `project_id`
   appends a new revision (**append-only**, number minted server-side; `note`
-  ≤ 200 chars).
-- `project_open` — newest revision, full study-ready network document.
-- `project_archive` — soft delete: hidden from `project_list`, data survives.
+  ≤ 200 chars). `test: true` marks a throwaway project.
+- `project_open` — newest revision of an **active** project, full study-ready
+  network document. An archived project does not open.
+- `project_archive` — soft delete: hidden from `project_list` and not loadable,
+  the data survives. There is no un-archive tool.
+- `project_purge` — hard delete of the project, its revisions and its stored
+  studies. A `test: true` project goes without ceremony; anything else needs
+  `confirm` set to the project's **exact name**. This app keeps no signed or
+  issued artefact, so nothing is protected by a signature — purge only when the
+  data should really disappear, and prefer `project_archive` otherwise.
 
 Use these to keep a document across conversations or to version a study
 (append a revision per design case rather than overwriting).
