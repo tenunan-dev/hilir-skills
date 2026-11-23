@@ -1,6 +1,6 @@
 ---
 name: atur
-description: Use the hilir Atur MCP server (atur.hilir.app) — the project planner and schedule record for construction and oil & gas projects: run CPM (dates, float, critical path), DCMA 14-point health with out-of-sequence and float-erosion checks, three-point Monte Carlo risk (P50/P80), earned value with S-curve and cash flow, delay window analysis / time impact, a 3/6-week look-ahead, BOQ-vs-programme reconciliation, and the Malaysian working calendar and approval lead times — while storing projects, append-only revisions, signed baselines, weekly progress with work-package roll-up, delay events and an audit of every write. 5M Resources supplies the data (norms, Malaysian calendars, rates, BOQ rules, P6/MSP parsing). Use when asked to build or check a schedule, baseline a programme, assess float or schedule health, run a risk analysis for a P80 date, report earned value, record weekly progress, analyse a delay or EOT, reconcile a bill of quantities against the programme, clear a throwaway test project, or answer what changed and who approved it.
+description: Use the hilir Atur MCP server (atur.hilir.app) — the project planner and schedule record for construction and oil & gas projects: run CPM (dates, float, critical path), DCMA 14-point health with out-of-sequence and float-erosion checks, three-point Monte Carlo risk (P50/P80), earned value with S-curve and cash flow, delay window analysis / time impact, a 3/6-week look-ahead, BOQ-vs-programme reconciliation, and the Malaysian working calendar and approval lead times — while storing projects, append-only revisions, signed baselines, weekly progress with work-package roll-up, delay events and an audit of every write. 5M Resources supplies the data (norms, rates, BOQ rules, P6/MSP parsing). Use when asked to build or check a schedule, baseline a programme, assess float or schedule health, run a risk analysis for a P80 date, report earned value, record weekly progress, analyse a delay or EOT, reconcile a bill of quantities against the programme, clear a throwaway test project, or answer what changed and who approved it.
 ---
 
 # Atur MCP (planner + schedule record)
@@ -14,9 +14,9 @@ gives it norms that produce durations, rates, BOQ→WBS rules and parsed P6/MSP 
 clause label and never asserts a clause number. Never re-derive data at atur, and never pretend a
 missing data tool exists.
 
-> **`parse_schedule` is live and verified (2026-11-23).** 5M Resources Worker
-> `bb716dab-6a48-4fcc-9d17-b0abb3325b2d`; all three formats (`p6_xml`, `p6_xer`, `msp_xml`) parse
-> and import into atur with zero errors and zero warnings, and `p6_xer` solves under CPM. Use it as
+> **`parse_schedule` is live and verified (2026-11-23).** 5M Resources catalog `0.36.0`; all three
+> formats (`p6_xml`, `p6_xer`, `msp_xml`) parse and import into atur with zero errors and zero
+> warnings, and `p6_xer` solves under CPM. Use it as
 > step 1 of the "new project from a planner's file" recipe — no manual fixing of the document.
 > Summaries/milestones may omit `duration_days` (accepted, stored 0). `data_date` is required by
 > atur and the parser supplies it for all three formats; if a file prints none, atur rejects it
@@ -98,7 +98,7 @@ log_actuals ◀──────── calibration_export
   "data_date": "2026-11-22",
   "currency": "MYR",
   "calendar": { "hours_per_day": 8, "weekend": [0, 6], "holidays": ["2026-12-25"],
-                "state": "JHR", "source": "resources get_work_calendar",
+                "state": "JHR", "source": "atur calendar_get",
                 "exclude_windows": [{ "from": "2027-01-01", "to": "2027-01-31", "reason": "NE monsoon" }] },
   "tasks": [
     { "id": "S4000", "name": "Civil", "type": "summary", "duration_days": 0 },
