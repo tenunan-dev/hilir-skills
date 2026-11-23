@@ -1,6 +1,6 @@
 ---
 name: atur
-description: Use the hilir Atur MCP server (atur.hilir.app) — the project planner and schedule record for construction and oil & gas projects: run CPM (dates, float, critical path), DCMA 14-point health with out-of-sequence and float-erosion checks, three-point Monte Carlo risk (P50/P80), earned value with S-curve and cash flow, delay window analysis / time impact, a 3/6-week look-ahead, and the Malaysian working calendar and approval lead times — while storing projects, append-only revisions, signed baselines, weekly progress with work-package roll-up, delay events and an audit of every write. 5M Resources supplies the data (norms, Malaysian calendars, rates, BOQ rules, P6/MSP parsing). Use when asked to build or check a schedule, baseline a programme, assess float or schedule health, run a risk analysis for a P80 date, report earned value, record weekly progress, analyse a delay or EOT, or answer what changed and who approved it.
+description: Use the hilir Atur MCP server (atur.hilir.app) — the project planner and schedule record for construction and oil & gas projects: run CPM (dates, float, critical path), DCMA 14-point health with out-of-sequence and float-erosion checks, three-point Monte Carlo risk (P50/P80), earned value with S-curve and cash flow, delay window analysis / time impact, a 3/6-week look-ahead, BOQ-vs-programme reconciliation, and the Malaysian working calendar and approval lead times — while storing projects, append-only revisions, signed baselines, weekly progress with work-package roll-up, delay events and an audit of every write. 5M Resources supplies the data (norms, Malaysian calendars, rates, BOQ rules, P6/MSP parsing). Use when asked to build or check a schedule, baseline a programme, assess float or schedule health, run a risk analysis for a P80 date, report earned value, record weekly progress, analyse a delay or EOT, reconcile a bill of quantities against the programme, clear a throwaway test project, or answer what changed and who approved it.
 ---
 
 # Atur MCP (planner + schedule record)
@@ -13,6 +13,14 @@ gives it norms that produce durations, rates, BOQ→WBS rules and parsed P6/MSP 
 `parse_schedule` and `map_boq_to_wbs`. Contract forms belong to **Hilir Kontrak**; atur records a
 clause label and never asserts a clause number. Never re-derive data at atur, and never pretend a
 missing data tool exists.
+
+> **`parse_schedule` is live and verified (2026-11-23).** 5M Resources Worker
+> `bb716dab-6a48-4fcc-9d17-b0abb3325b2d`; all three formats (`p6_xml`, `p6_xer`, `msp_xml`) parse
+> and import into atur with zero errors and zero warnings, and `p6_xer` solves under CPM. Use it as
+> step 1 of the "new project from a planner's file" recipe — no manual fixing of the document.
+> Summaries/milestones may omit `duration_days` (accepted, stored 0). `data_date` is required by
+> atur and the parser supplies it for all three formats; if a file prints none, atur rejects it
+> rather than inventing one. See `docs/RESOURCES-ADDITIONS.md` for the contract.
 
 ## Connection
 
@@ -54,29 +62,31 @@ log_actuals ◀──────── calibration_export
                                         schedule_evm · schedule_lookahead · eot_analyse
 ```
 
-## Tools (24)
+## Tools (26)
 
 | Tool | Scope | What it does |
 |---|---|---|
 | `whoami`, `get_capabilities` | — | identity; the exact planner/data boundary and what is not implemented |
 | `calendar_get` | read | Malaysian working calendar: state weekend rule, holidays by confidence, monsoon/earthwork windows |
 | `localisation_lookup` | read | approval lead-time ranges (DOE, BOMBA, TNB, councils) with basis and `as_of` |
-| `project_create`\* | write | create a project |
-| `project_list`, `project_open` | read | projects; a revision's full document + baseline + delays + progress history |
+| `project_create`\* | write | create a project; `test: true` marks a throwaway one (the only kind `project_purge` removes) |
+| `project_list`, `project_open` | read | projects (archived ones too with `include_archived: true`); a revision's full document + baseline + delays + progress history |
 | `project_archive`\* | write | soft delete; revisions survive |
+| `project_purge`\* | write | delete a test project and everything stored for it; refuses a project with a frozen baseline, and a real project without `confirm: "<its name>"` |
 | `revision_list` | read | history: kind, note, author, data date, task count |
-| `schedule_import`\* | write | validate + store a revision; `preview: true` diffs without writing |
+| `schedule_import`\* | write | validate + store a revision; `preview: true` diffs without writing; `validation.ignored_fields` / `mistyped_fields` name anything that was not stored |
 | `schedule_diff` | read | structural diff; `format: "markdown"` gives the weekly report; defaults to baseline → latest |
 | `schedule_cpm` | read | early/late dates, total/free float, critical path, summary roll-up |
-| `schedule_health` | read | DCMA 14 + out-of-sequence, float erosion, WBS completeness; `na` with reasons |
+| `schedule_health` | read | DCMA 14 + out-of-sequence, float erosion, WBS completeness; the logic test exempts the open start and finish; `na` with reasons |
 | `schedule_sra` | read | seeded Monte Carlo: P10/P50/P80/P90/P95, contingency, criticality, sensitivity |
-| `schedule_evm` | read | BAC/PV/EV/AC, SPI/CPI, EAC/ETC/VAC/TCPI, S-curve, cash flow |
+| `schedule_evm` | read | BAC/PV/EV/AC, SPI/CPI, EAC/ETC/VAC/TCPI, S-curve, cash flow; `pv_basis` says whether PV used planned dates or CPM early dates |
 | `schedule_lookahead` | read | 3/6-week look-ahead with open predecessors |
-| `eot_analyse` | read | window analysis / TIA: days moved per window, concurrency flagged |
+| `boq_reconcile` | read | reconcile a BOQ against the revision: which lines an activity carries, quantity/unit/WBS agreement, uncovered lines and orphan items; `matched_ok + mismatched + unmatched_lines = lines_total` |
+| `eot_analyse` | read | window analysis / TIA: days moved per window on the activities the events name, concurrency flagged |
 | `baseline_freeze`\* | write | freeze a revision: named sign-off, health gate, reasoned rebaseline |
-| `progress_ingest`\* | write | per-task actuals → a new revision, with work-package roll-up |
+| `progress_ingest`\* | write | per-task actuals → a new revision, with work-package roll-up; an actual date after the data date is refused |
 | `calibration_export` | read | actual man-hours as rows for resources' `log_actuals` |
-| `delay_event_add`\* | write | record a delay event |
+| `delay_event_add`\* | write | record a delay event; `affected_tasks` must be task ids in the revision, and unknown ones are reported |
 | `record_analysis`, `analysis_list` | write / read | bind an analysis result to the revision it ran on |
 
 ## The document — `atur.schedule/1`
@@ -125,10 +135,15 @@ Rules that matter:
   critical. Constraints are clamps.
 - **Health**: DCMA thresholds are 5 % (0 % for leads and negative float), CPLI/BEI ≥ 0.95 — they
   are conventions, not law. `na` means the data is absent, not that the check passed. `extra`
-  checks (out-of-sequence, float erosion, WBS completeness) are atur's, not DCMA's.
+  checks (out-of-sequence, float erosion, WBS completeness) are atur's, not DCMA's. The logic test
+  exempts the open start and the open finish, as DCMA does: a clean chain with one start and one
+  finish passes; a loose activity that is neither still fails.
 - **Risk**: duration-only, activities independent, triangular distribution, seeded. Report the
   count of activities with no three-point estimate; they were treated as certain.
-- **EVM**: `na` without budgets; `spi`/`cpi` null when a denominator is zero; EAC = BAC/CPI.
+- **EVM**: `na` without budgets; `spi`/`cpi` null when a denominator is zero; EAC = BAC/CPI. PV is
+  measured on the baseline's planned dates when one exists, else this revision's; an activity that
+  stores none uses its CPM early dates, anchored at the earliest data date in the record. Quote
+  `pv_basis` with the number — which dates PV was measured on is part of the answer.
 - **EOT**: days moved per window with concurrency flagged. Analysis only — entitlement and clause
   numbers belong to the contract.
 
@@ -140,6 +155,7 @@ Rules that matter:
 | Record progress, delay events, analyses | **Freely** — it is the record of what was reported |
 | Freeze or supersede a baseline | **Human sign-off required**: `signoff_name` must be a real person who approved it; a rebaseline needs `reason` |
 | Override a failed health gate | **Human decision**, with `allow_unhealthy: true` and a `reason`; the override is audited |
+| Purge a project | **Only a test project** (`test: true`), or a real one with `confirm: "<its exact name>"`; never one with a frozen baseline — that record is signed |
 | Invent a sign-off, a duration, a cost, a float or a clause | **Never** |
 
 ## Recipes
@@ -147,7 +163,7 @@ Rules that matter:
 **New project from a planner's file**
 1. `resources.parse_schedule({ content })` + `atur.calendar_get({ state: "JHR", year: 2027 })` →
    the document and the calendar it should be computed on.
-2. `atur.project_create({ name, currency: "MYR" })`.
+2. `atur.project_create({ name, currency: "MYR" })` — add `test: true` only for a throwaway.
 3. `atur.schedule_import({ project_id, schedule, preview: true })` → show validation + diff.
 4. `atur.schedule_import({ project_id, schedule })` → revision 1.
 5. `atur.schedule_cpm` and `atur.schedule_health` → show dates and the failing checks.
@@ -186,7 +202,9 @@ mandatory when a baseline exists; the old one is superseded, never edited.
 
 Codes: `forbidden` (scope), `not_found`, `schedule_invalid` (validation in the message),
 `reason_required`, `health_gate` (fix or override), `nothing_applied`, `no_comparison_base`,
-`logic_cycle`, `no_revisions`.
+`logic_cycle`, `no_revisions`, `confirm_required` (purge without the project name),
+`baseline_exists` (purge of a signed record), `actual_after_data_date` (progress after the data date,
+with the field named in `details.issues`).
 
 ## What atur does not do
 
