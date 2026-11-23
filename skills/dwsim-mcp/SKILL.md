@@ -57,15 +57,19 @@ key carries the scope) — ask the human, don't retry.
    first. Never trust `set: true` alone — a value is only real when the solve uses it.
 4. **`dwsim_flowsheet_check` before every solve.** Cheap. Catches missing specs, open
    reactor outlets and compound drift before you pay for the solve.
-5. **Trust findings, not ok.** Since the HILIR fork `dwsim_solve_run` returns
-   `ok:false` whenever anything is unsolved or a blocker exists; `ok:true` means *every
-   object calculated*. Read `findings[]` and fix what it names; `dwsim_solve_diagnostics`
-   + `dwsim_explain_finding` when unclear.
+5. **Trust findings, not ok.** Since fork v7 `dwsim_solve_run` returns `ok:false` only
+   when a **steady-state** object is unsolved or a blocker exists; controllers, gauges and
+   other dynamics-only objects are never calculated in steady state and are listed under
+   `not_applicable_steady_state` (each status entry carries `steady_state`).
+   `dwsim_flowsheet_check` warns `CONTROLLER_UNWIRED` when a PID lacks a side of its loop.
+   Read `findings[]` and fix what it names; `dwsim_solve_diagnostics` +
+   `dwsim_explain_finding` when unclear.
 6. **Read results from the fork-shaped payloads.** `dwsim_unitop_get_results` `summary`
    carries `duty_kW`, efficiency and every connected stream's calculated T/P/flows;
    per-unit keys stay in `properties`. `dwsim_stream_get_results` answers material *and*
    energy streams (energy returns `energy_flow_kW`); unflashed phase values come back
-   `null`, not 0/NaN — that is "no data", not an error.
+   `null`, not 0/NaN — that is "no data", not an error. An empty phase has no compounds
+   and no numbers; a present phase carries the stream temperature and pressure.
 7. **Save before an expensive solve** (`dwsim_flowsheet_save`), and close what you
    opened (`dwsim_flowsheet_close`).
 
@@ -97,6 +101,11 @@ key carries the scope) — ask the human, don't retry.
   `dwsim_dynamics_controller action=create` (pv/mv wiring; optional feedforward
   `ff_object`/`ff_property`). A create on an existing tag errors — use `action=set` to
   tune. `dwsim_dynamics_tune_pid` needs a stored state so trials are comparable.
+  The controller list reports flowsheet **tags** with property descriptions
+  (`controls` / `manipulates`, e.g. `"S2.PROP_MS_0 (Temperature)"`) and keeps the engine
+  address in `controls_id` / `manipulates_id`; `dwsim_flowsheet_check` warns
+  `CONTROLLER_UNWIRED` until both sides are wired — a steady-state solve never moves an
+  unwired controller and reports `ok:true` either way.
 - **Dynamics in order.** `dwsim_dynamics_inspect` → `_check` → `_setup` (schedule) →
   `_object` (pressure-flow spec, valve calc mode) → `_properties` (property ids are not
   guessable — call it before monitor/event/controller) → `_monitor` → `_event` →
