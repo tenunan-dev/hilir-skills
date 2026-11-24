@@ -1,6 +1,6 @@
 ---
 name: atur
-description: Use the hilir Atur MCP server (atur.hilir.app) — the project planner and schedule record for construction and oil & gas projects: run CPM (dates, float, critical path), DCMA 14-point health with out-of-sequence and float-erosion checks, three-point Monte Carlo risk (P50/P80), earned value with S-curve and cash flow, delay window analysis / time impact, a 3/6-week look-ahead, BOQ-vs-programme reconciliation, and the Malaysian working calendar and approval lead times — while storing projects, append-only revisions, signed baselines, weekly progress with work-package roll-up, delay events and an audit of every write. 5M Resources supplies the data (norms, rates, BOQ rules, P6/MSP parsing). Use when asked to build or check a schedule, baseline a programme, assess float or schedule health, run a risk analysis for a P80 date, report earned value, record weekly progress, analyse a delay or EOT, reconcile a bill of quantities against the programme, clear a throwaway test project, or answer what changed and who approved it.
+description: Use the hilir Atur MCP server (atur.hilir.app) — the project planner and schedule record for construction and oil & gas projects: run CPM (dates, float, critical path), DCMA 14-point health with out-of-sequence and float-erosion checks, three-point Monte Carlo risk (P50/P80), earned value with S-curve and cash flow, delay window analysis / time impact, a 3/6-week look-ahead, BOQ-vs-programme reconciliation, and the Malaysian working calendar and approval lead times — while storing projects, append-only revisions, signed baselines, weekly progress with work-package roll-up, delay events and an audit of every write. 5M Resources supplies the data (norms, rates, BOQ rules, P6/MSP parsing). Use when asked to build or check a schedule, baseline a programme, assess float or schedule health, run a risk analysis for a P80 date, report earned value, record weekly progress, analyse a delay or EOT, reconcile a bill of quantities against the programme, clear a throwaway test project, or answer what changed and who approved it — and to hand someone a Gantt chart or schedule report as a PDF (P6/MS Project style bar chart with logic links and predecessor/successor columns, or a report with health, earned value and risk).
 ---
 
 # Atur MCP (planner + schedule record)
@@ -32,6 +32,7 @@ missing data tool exists.
 | Credential | hilir Access JWT with `aud = https://atur.hilir.app`, or a person's estate key |
 | Scopes | `atur:read` (every read and analysis), `atur:write` (create, import, freeze, progress, delays, analyses) |
 | Transport | Streamable HTTP, stateless — no session handshake |
+| Documents | `GET /api/projects/:id/gantt.pdf`, `GET /api/projects/:id/report.pdf` (same credential; `schedule_export` builds the URL) |
 
 ```bash
 TOKEN="…"
@@ -62,7 +63,7 @@ log_actuals ◀──────── calibration_export
                                         schedule_evm · schedule_lookahead · eot_analyse
 ```
 
-## Tools (26)
+## Tools (27)
 
 | Tool | Scope | What it does |
 |---|---|---|
@@ -88,7 +89,7 @@ log_actuals ◀──────── calibration_export
 | `calibration_export` | read | actual man-hours as rows for resources' `log_actuals` |
 | `delay_event_add`\* | write | record a delay event; `affected_tasks` must be task ids in the revision, and unknown ones are reported |
 | `record_analysis`, `analysis_list` | write / read | bind an analysis result to the revision it ran on |
-| `audit_log` | read | the write history: which tool was called, on which project, when — if a write is not here, it did not happen through atur |
+| `schedule_export` | read | returns the URL of the P6/MS-Project Gantt PDF or the schedule-report PDF for a revision — hand a person a link, not a base64 blob |
 
 ## The document — `atur.schedule/1`
 
@@ -189,6 +190,16 @@ Rules that matter:
 **Rebaseline**
 `atur.baseline_freeze({ project_id, revision, label, signoff_name, reason })` — the reason is
 mandatory when a baseline exists; the old one is superseded, never edited.
+
+**Hand a person a PDF**
+1. `atur.schedule_export({ project_id, kind: "gantt" })` → a URL on atur.hilir.app.
+2. Open it with the caller's own credential — it is **not** a public link, and it 401s without one.
+3. `kind: "report"` gives the schedule report instead. Options: `revision` (default latest),
+   `links: all|critical|none` (a dense network reads better critical-only), `paper: auto|a3|a2|a4`
+   (auto picks A2 above 380 working days), `baseline` and `float` (both default true).
+4. The Gantt is the P6/MS Project view: activity table with predecessor and successor columns in
+   `A1FS+2` notation, summary brackets, milestone diamonds, progress fill, float bars, baseline
+   bars, elbow logic links with arrowheads, a two-tier date axis and a dashed data-date line.
 
 ## Honesty rules and error codes
 
