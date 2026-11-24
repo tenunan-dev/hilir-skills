@@ -89,7 +89,7 @@ log_actuals ◀──────── calibration_export
 | `calibration_export` | read | actual man-hours as rows for resources' `log_actuals` |
 | `delay_event_add`\* | write | record a delay event; `affected_tasks` must be task ids in the revision, and unknown ones are reported |
 | `record_analysis`, `analysis_list` | write / read | bind an analysis result to the revision it ran on |
-| `schedule_export` | read | returns the URL of the P6/MS-Project Gantt PDF or the schedule-report PDF for a revision — hand a person a link, not a base64 blob |
+| `schedule_export` | read | returns the URL of the P6/MS-Project Gantt PDF or the schedule-report PDF for a revision — hand a person a link, not a base64 blob. With a frozen baseline the Gantt becomes a tracking chart: BL Start, BL Finish and finish-variance columns plus baseline bars |
 
 ## The document — `atur.schedule/1`
 
@@ -198,8 +198,13 @@ mandatory when a baseline exists; the old one is superseded, never edited.
    `links: all|critical|none` (a dense network reads better critical-only), `paper: auto|a3|a2|a4`
    (auto picks A2 above 380 working days), `baseline` and `float` (both default true).
 4. The Gantt is the P6/MS Project view: activity table with predecessor and successor columns in
-   `A1FS+2` notation, summary brackets, milestone diamonds, progress fill, float bars, baseline
-   bars, elbow logic links with arrowheads, a two-tier date axis and a dashed data-date line.
+   `A1FS+2` notation, summary brackets, milestone diamonds, progress fill, float bars, elbow logic
+   links with arrowheads, a two-tier date axis and a dashed data-date line. The critical path is
+   red, other work blue.
+5. With an active frozen baseline it is a **tracking** Gantt: `BL Start`, `BL Finish` and `Var`
+   (finish variance in working days — red late, green early) join the table, grey baseline bars sit
+   under each activity bar, and the title block prints the project-level slip. `baseline: false`
+   turns it off.
 
 ## Honesty rules and error codes
 
