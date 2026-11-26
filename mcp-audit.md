@@ -24,7 +24,7 @@ own mounted connections.
 
 | Skill | Server | Connected this session | Live evidence | Live tools | Code registry | Canonical skill | Verdict |
 |---|---|---|---|---|---|---|---|
-| `atur` | `atur.hilir.app/mcp` | yes | `get_capabilities` → 27 tools + scopes | **27** | 27 (`src/tools.ts`) | no count stated; all 27 named | ✅ in sync |
+| `atur` | `atur.hilir.app/mcp` | yes | `get_capabilities` → 27 tools + scopes | **27** | 27 (`src/tools.ts`) | 27 stated; 27 named (the table listed 26 — `audit_log` was missing; fixed 2026-11-26) | ✅ in sync |
 | `conteng` | `conteng.hilir.app/mcp` | yes | `conteng_files` → 3 stored files | **31** | 32 (`app/tools/__init__.py`, incl. `conteng_grid`) | “25 tools”; 24 named; says DOCX/XLSX/PPTX unsupported | ❌ stale both directions |
 | `dwsim-mcp` | `dwsim.hilir.app/mcp` | yes | `dwsim_unitop_list_types` → 45 types | **70** | 70 (`dwsim-fork`) | 70 (58 upstream + 12 HILIR) | ✅ in sync |
 | `hilir-cad` | `cad.hilir.app/mcp` | yes | `drawing_list` → 7 drawings | **34** | `TOOL_COUNT = 34` (test-enforced) | 34 | ✅ in sync |
@@ -126,17 +126,23 @@ still says 258 (verified 2026-11-23).
    2 untranslated (stats; catalogue freshly loaded 2026-11-25 23:22 UTC). The
    termbase and hybrid search work; translated full text does not exist yet.
 
-10. **Minor notes:** `atur` is the only server-backed skill without a stated
-    tool count — it defers to `tools/list`, which the README rule permits, and
-    it does name all 27 live tools. (A naive `name: "…"` grep over
-    `src/tools.ts` picks up a data literal `"anchor"` inside `delay_event_add`
-    — it is not a 28th tool.) The CAD test suite enforces
-    `TOOL_COUNT`/registration lockstep — the pattern the other repos could
-    copy.
+10. **`atur`'s tool table was one row short.** The skill states its count
+    (`## Tools (27)`) and both the live `get_capabilities` and `src/tools.ts`
+    expose 27, but the table named only 26 — `audit_log` (read; the write
+    history) appeared only in the honesty rules prose. **Fixed 2026-11-26:** the
+    row is added, both installed mirrors re-copied, and a name-by-name diff
+    against the registry now shows 27 of 27 named with no phantom names. (A
+    naive `name: "…"` grep over `src/tools.ts` picks up a data literal
+    `"anchor"` inside `delay_event_add` — it is not a 28th tool.) The CAD test
+    suite enforces `TOOL_COUNT`/registration lockstep — the pattern the other
+    repos could copy.
 
 ## Live evidence collected (2026-11-26)
 
-- **atur** `get_capabilities`: 27 tools, scopes `atur:read`/`atur:write`;
+- **atur** `get_capabilities`: 27 tools (including the read-scoped `audit_log`),
+  scopes `atur:read`/`atur:write`; `audit_log` answered with 3 writes
+  (`project_purge` ×2, `project_create`, 2026-11-24) — project_id, actor, tool,
+  action and timestamp per row;
   Gantt + report PDFs served under the caller's sign-in; 5M Resources recorded
   as companion, catalog 0.36.0, “live and verified (2026-11-23)”.
 - **conteng** `conteng_files`: 3 stored files (annotated `plan.pdf`, 18 and

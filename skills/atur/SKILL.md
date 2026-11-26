@@ -89,6 +89,7 @@ log_actuals ◀──────── calibration_export
 | `calibration_export` | read | actual man-hours as rows for resources' `log_actuals` |
 | `delay_event_add`\* | write | record a delay event; `affected_tasks` must be task ids in the revision, and unknown ones are reported |
 | `record_analysis`, `analysis_list` | write / read | bind an analysis result to the revision it ran on |
+| `audit_log` | read | the write history — who called which tool, on which project, when; `project_id` narrows it to one project (default: every project the caller owns), `limit` defaults 50, max 200 |
 | `schedule_export` | read | returns the URL of the P6/MS-Project Gantt PDF or the schedule-report PDF for a revision — hand a person a link, not a base64 blob. With a frozen baseline the Gantt becomes a tracking chart: BL Start, BL Finish and finish-variance columns plus baseline bars |
 
 ## The document — `atur.schedule/1`
