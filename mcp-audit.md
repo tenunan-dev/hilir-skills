@@ -12,8 +12,11 @@ audits update this file in place; do not add dated copies.
   plus the standalone conteng mount) — one cheap read tool per server.
 - **Code registries** grepped in each app repo (read-only).
 - **Canonical `SKILL.md`** counts and tool names vs the live toolsets.
-- **Mirror sync**: canonical vs `~/.agents/skills`, `~/.zcode/skills` and the
-  plugin cache.
+- **Mirror sync**: canonical vs `~/.agents/skills`, `~/.claude/skills`,
+  `~/.zcode/skills`, the plugin cache, **and each app repo's own copies**
+  (`<app>/.claude/skills`, `<app>/.github/skills`). Those last two were not
+  checked in the first pass and three of the four stale `dwsim-mcp` copies
+  were hiding there (2026-11-26).
 - **Unauthenticated production probes** of all nine endpoints.
 
 No credentials were printed or stored; there is no estate key in this shell, so
@@ -42,8 +45,9 @@ No `sk-` keys exist anywhere (docs and environment both confirm).
 
 **Totals:** 267 tools exposed across the session's 8 live connections
 (27+31+70+34+32+32+32+9). Across all nine servers (resources at its registry
-count of 39) the estate serves **275** tools today; the plugin README's table
-still says 258 (verified 2026-11-23).
+count of 39) the estate serves **306** tools today (267 + 39); the plugin
+README's table still says 258 (verified 2026-11-23). *Corrected 2026-11-26 —
+the first draft printed 275, which its own two figures do not produce.*
 
 ## Findings
 
@@ -86,7 +90,17 @@ still says 258 (verified 2026-11-23).
 5. **Five mirrors are stale; canonical is newer in every case** — re-sync
    `~/.agents/skills` (and `~/.zcode/skills` for conteng) from this repo:
    - `dwsim-mcp`: mirror says 69 (58 + 11) and is missing
-     `dwsim_flowsheet_stream_table`; canonical/live = 70 (58 + 12);
+     `dwsim_flowsheet_stream_table`; canonical/live = 70 (58 + 12).
+     **CLOSED 2026-11-26** — but four copies were stale, not one: `~/.agents`,
+     `~/.claude`, and both app-local mirrors `hilir-dwsim/.claude/skills` and
+     `hilir-dwsim/.github/skills` all still carried the pre-v8 text (69 tools,
+     no stream-table row, and the retired `Authorization: Bearer sk-…`
+     wording at three sites). Re-verified before syncing — live
+     `dwsim_unitop_list_types` → 45 types, the live mount exposes
+     `dwsim_flowsheet_stream_table`, and the fork registry at HEAD `2879294`
+     greps 70 dispatch names, so live = code = canonical = 70. All four
+     re-copied from canonical, checksum-identical (`e54372d7e6a419f4…`); the
+     two app copies committed and pushed in `hilir-dwsim` as `69facc1`;
    - `mygis-mcp`: mirror says 35 POI category presets; canonical/live = 44;
    - `resources-mcp`: mirror's tool table says 32 always-present
      (25 read + 7 compute); canonical = 34 (26 read + 8 compute) + 5
@@ -175,9 +189,12 @@ still says 258 (verified 2026-11-23).
    document it as live).
 2. **Rewrite `skills/techlib-mcp/SKILL.md` for the 32-tool surface**
    (products, materials, drawings, `list_by_tag`).
-3. **Re-sync the five stale mirrors** from this repo (conteng →
-   `~/.agents` + `~/.zcode`; dwsim-mcp, mygis-mcp, resources-mcp, techlib-mcp →
-   `~/.agents`).
+3. **Re-sync the stale mirrors** from this repo (conteng → `~/.agents` +
+   `~/.zcode`; mygis-mcp, resources-mcp, techlib-mcp → `~/.agents`).
+   `dwsim-mcp` is **done** (2026-11-26): four surfaces, `~/.agents` +
+   `~/.claude` + the two `hilir-dwsim` app mirrors — count mirror surfaces,
+   not one directory: the app repos carry their own copies and this audit's
+   first pass missed three of the four.
 4. **Investigate the `hilir-resources` mount failure** — token scopes vs
    server auth.
 5. **Update the plugin README tool table** in the ZCode Plugin repo (edited
