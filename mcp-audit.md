@@ -132,7 +132,6 @@ the first draft printed 275, which its own two figures do not produce.*
      and one checksum across all of them: the app mirror
      `hilir-tech-library/skills/techlib-mcp/SKILL.md` (with its `.claude` and
      `.github` symlinks, which follow it) and `~/.agents/skills/techlib-mcp/`;
-   
    - `conteng`: canonical recently added the count claim and a “find a handle
      you lost” paragraph the mirrors lack.
 
