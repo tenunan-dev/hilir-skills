@@ -33,7 +33,7 @@ own mounted connections.
 | `hilir-cad` | `cad.hilir.app/mcp` | yes | `drawing_list` → 7 drawings | **34** | `TOOL_COUNT = 34` (test-enforced) | 34 | ✅ in sync |
 | `hilir-thunderbolt` | `thunderbolt.hilir.app/mcp` | yes | `get_capabilities` → engine 0.2.3 | **32** | 27 engine + 5 project | 32 (27 + 5) | ✅ in sync |
 | `mygis-mcp` | `mygis.hilir.app/mcp` | yes | `layers_list` → 27 layers; `service_status` | **32** | 32 (`src/tools/*.ts`) | 32 | ✅ in sync |
-| `techlib-mcp` | `techlib-api.hilir.app/mcp` | yes | `library_stats` → 2369 sources … | **32** | 32 (`agent/server.py`) | “26 tools” | ❌ skill stale by 6 |
+| `techlib-mcp` | `techlib-api.hilir.app/mcp` | yes | `library_stats` → 2369 sources … | **32** | 32 (`agent/server.py`) | 32, all named (fixed 2026-11-26) | ✅ in sync |
 | `tlea-mcp` | `tlea-api.hilir.app/mcp` | yes | `stats` → last_load 2026-11-25 | **9** | 9 (`api/mcp.py`) | 9 | ✅ in sync |
 | `resources-mcp` | `resources.hilir.app/mcp` | **no** — configured in the plugin `.mcp.json` but not mounted | unauth probe → 401 (alive, gated) | — | 39 (`server/src/tools.ts` `TOOL_MAP`) | 39 | ⚠️ endpoint up; code = doc; session mount failed |
 
@@ -86,6 +86,28 @@ the first draft printed 275, which its own two figures do not produce.*
    the skill: `get_product`/`list_products` (458 product rows live),
    `get_material`/`list_materials` (249), `get_drawing`/`list_drawings` (345),
    `list_by_tag`. No phantom tools — everything the skill names exists.
+   **CLOSED 2026-11-26** — checked the claim against the live server first:
+   the session's mount exposes 32 tools, `agent/server.py` registers 32 and
+   `docs/MCP.md` already said 32, so the drift was only in the skill (it said
+   26 and named none of the four families). Canonical
+   `skills/techlib-mcp/SKILL.md` rewritten: count and holdings to 32 with
+   products, drawings and materials named; description rewritten inside the
+   1024-char limit with frontmatter still exactly `name` + `description`; four
+   route rows added (model lines → `get_product`, PFD/P&ID → `get_drawing`,
+   material properties → `get_material`, source inventory → `list_by_tag`);
+   and the rules that make those records usable (a product parameter needs its
+   printed basis **and** its `source_url`; two-variant values stay separate
+   specs; a drawing is a citation, not a copy). Verified every one of the 32
+   live names now appears in the skill by grep, and exercised the four new
+   families live — `list_products(query="burner")` 18 rows with `url` +
+   `source_urls`, `list_materials(query="anode")` 7,
+   `list_drawings(query="amine")` 4, `list_drawings(diagram_type="flowsheet")`
+   exactly the 2 rows `SELECT diagram_type, count(*) FROM og.drawing` reports
+   for that type (the whole vocabulary matches the data: 15 P&ID / 44 PFD /
+   253 schematic / 31 block-diagram / 2 flowsheet), `list_by_tag(code="CCS")`
+   the CCS inventory. One datum for finding 11: of the 32 techlib names only
+   `list_technology_register` (24 chars) arrives aliased here, as
+   `list_technol_1c76011d`; the other 31 are verbatim.
 
 5. **Five mirrors are stale; canonical is newer in every case** — re-sync
    `~/.agents/skills` (and `~/.zcode/skills` for conteng) from this repo:
@@ -106,7 +128,11 @@ the first draft printed 275, which its own two figures do not produce.*
      (25 read + 7 compute); canonical = 34 (26 read + 8 compute) + 5
      store-bound = 39, matching the code registry;
    - `techlib-mcp`: mirror is missing the “one document per source url”
-     paragraph;
+     paragraph. **CLOSED 2026-11-26** — three surfaces re-synced from canonical
+     and one checksum across all of them: the app mirror
+     `hilir-tech-library/skills/techlib-mcp/SKILL.md` (with its `.claude` and
+     `.github` symlinks, which follow it) and `~/.agents/skills/techlib-mcp/`;
+   
    - `conteng`: canonical recently added the count claim and a “find a handle
      you lost” paragraph the mirrors lack.
 
@@ -205,10 +231,14 @@ the first draft printed 275, which its own two figures do not produce.*
    `conteng_grid` as not-yet-deployed (or deploy the 32-tool image, then
    document it as live).
 2. **Rewrite `skills/techlib-mcp/SKILL.md` for the 32-tool surface**
-   (products, materials, drawings, `list_by_tag`).
+   (products, materials, drawings, `list_by_tag`). **Done 2026-11-26** — see
+   finding 4 for what was written and what was exercised live; the app mirror
+   and the `~/.agents` install were re-synced in the same pass.
 3. **Re-sync the stale mirrors** from this repo (conteng → `~/.agents` +
-   `~/.zcode`; mygis-mcp, resources-mcp, techlib-mcp → `~/.agents`).
-   `dwsim-mcp` is **done** (2026-11-26): four surfaces, `~/.agents` +
+   `~/.zcode`; mygis-mcp, resources-mcp → `~/.agents`).
+   `techlib-mcp` is **done** (2026-11-26): three surfaces (the
+   `hilir-tech-library` app mirror plus its two symlinks, and `~/.agents`), one
+   checksum. `dwsim-mcp` is **done** (2026-11-26): four surfaces, `~/.agents` +
    `~/.claude` + the two `hilir-dwsim` app mirrors — count mirror surfaces,
    not one directory: the app repos carry their own copies and this audit's
    first pass missed three of the four.
