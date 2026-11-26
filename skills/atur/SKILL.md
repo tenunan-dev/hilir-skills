@@ -33,6 +33,7 @@ missing data tool exists.
 | Scopes | `atur:read` (every read and analysis), `atur:write` (create, import, freeze, progress, delays, analyses) |
 | Transport | Streamable HTTP, stateless — no session handshake |
 | Documents | `GET /api/projects/:id/gantt.pdf`, `GET /api/projects/:id/report.pdf` (same credential; `schedule_export` builds the URL) |
+| Health | `GET https://atur.hilir.app/healthz` — anonymous; `status`, `version`, `tools` (the deployed count) and `toolset_fingerprint`, so you can see what a deployment serves before signing in |
 
 ```bash
 TOKEN="…"
