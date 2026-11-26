@@ -151,6 +151,23 @@ the first draft printed 275, which its own two figures do not produce.*
     suite enforces `TOOL_COUNT`/registration lockstep — the pattern the other
     repos could copy.
 
+11. **Long tool names arrive aliased in this client** (noted while closing the
+    dwsim finding, 2026-11-26). In the ZCode session every `dwsim_*` name over
+    24 characters is exposed truncated plus an 8-hex disambiguator — the 70-tool
+    surface splits cleanly: 49 names of ≤24 chars arrive verbatim
+    (`dwsim_unitop_list_types`, `dwsim_flowsheet_balance`) and the 21 longer
+    ones arrive as e.g. `dwsim_flowshee_051061f9` for
+    `dwsim_flowsheet_stream_table`, `dwsim_thermo_a_bb418614` for
+    `dwsim_thermo_add_compounds`. The plugin's `.mcp.json` declares no renaming,
+    so this is the client's own normalisation, not a server or plugin defect;
+    canonical `SKILL.md` names stay correct for Claude/Copilot. Consequence for
+    an agent: in a plugin-mounted ZCode session, resolve these tools by
+    description/id rather than by the literal name the skill prints — calling
+    the literal name does not resolve. Verified by calling the aliased
+    `stream_table` (create flowsheet → add Water → add FEED → one call returns
+    the material row with `calculated:false` and `null` for every unflashed
+    phase value, never `NaN`).
+
 ## Live evidence collected (2026-11-26)
 
 - **atur** `get_capabilities`: 27 tools (including the read-scoped `audit_log`),
